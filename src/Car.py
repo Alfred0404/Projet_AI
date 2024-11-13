@@ -14,7 +14,7 @@ class Car:
         self.width = 50
         self.angle = 0
         self.wheel_angle = 0
-        self.angle_speed = 5
+        self.angle_speed = 4
         self.speed = 0
         self.acceleration = 0.1
         self.max_speed = 5
@@ -56,14 +56,14 @@ class Car:
         front_right = (
             int(
                 image_rect.centerx
-                + (self.height + 13)
+                + (self.height + 8)
                 // 2
                 * math.cos(math.radians(self.angle) + math.pi / 3)
                 * zoom_factor
             ),
             int(
                 image_rect.centery
-                - (self.height + 13)
+                - (self.height + 8)
                 // 2
                 * math.sin(math.radians(self.angle) + math.pi / 3)
                 * zoom_factor
@@ -72,14 +72,14 @@ class Car:
         back_left = (
             int(
                 image_rect.centerx
-                - (self.height + 13)
+                - (self.height + 8)
                 // 2
-                * math.cos(math.radians(self.angle) + math.pi / 3)
+                * math.cos(math.radians(self.angle) + math.pi / 3 + 0.05)
                 * zoom_factor
             ),
             int(
                 image_rect.centery
-                + (self.height + 13)
+                + (self.height + 8)
                 // 2
                 * math.sin(math.radians(self.angle) + math.pi / 3)
                 * zoom_factor
@@ -89,14 +89,14 @@ class Car:
         back_right = (
             int(
                 image_rect.centerx
-                + (self.height + 13)
+                + (self.height + 8)
                 // 2
                 * math.cos(math.radians(self.angle) - math.pi / 3)
                 * zoom_factor
             ),
             int(
                 image_rect.centery
-                - (self.height + 13)
+                - (self.height + 8)
                 // 2
                 * math.sin(math.radians(self.angle) - math.pi / 3)
                 * zoom_factor
@@ -105,14 +105,14 @@ class Car:
         front_left = (
             int(
                 image_rect.centerx
-                + (self.height + 13)
+                + (self.height + 8)
                 // 2
-                * math.cos(math.radians(self.angle) - 4 * math.pi / 3)
+                * math.cos(math.radians(self.angle) - 4 * math.pi / 3 - 0.05)
                 * zoom_factor
             ),
             int(
                 image_rect.centery
-                - (self.height + 13)
+                - (self.height + 8)
                 // 2
                 * math.sin(math.radians(self.angle) - 4 * math.pi / 3)
                 * zoom_factor
@@ -122,12 +122,12 @@ class Car:
         corners = [image_rect.center, front_right, back_left, back_right, front_left]
 
         screen.blit(rotated_image, image_rect.topleft)
-        # pygame.draw.circle(screen, (0, 0, 255), image_rect.center, 5)
 
         # Afficher les rayons de vue
         self.display_rays(screen, image_rect.center, zoom_factor)
 
         for corner in corners:
+            # pygame.draw.circle(screen, (0, 0, 255), corner, 3)
             if screen.get_at(corner) == background:
                 self.reset()
 
