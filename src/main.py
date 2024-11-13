@@ -1,8 +1,8 @@
-import pygame
 import sys
 
-from Car import Car
+import pygame
 
+from Car import Car
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
@@ -16,8 +16,9 @@ while True:
         ):
             sys.exit()
 
-    screen.fill((0, 0, 0))
+    screen.fill((70, 170, 70))
 
     car.update(screen)
+
     pygame.display.flip()
     clock.tick(60)
