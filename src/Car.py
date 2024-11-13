@@ -208,15 +208,38 @@ class Car:
         
     def display_rays(self, screen, center, zoom_factor):
         # Afficher les rayons de vue
-        def cast_ray(self,center_position, ray_angle, zoom_factor):
-            ray_length = 50
-            end_x = center_position[0] + ray_length * math.cos(-ray_angle) * zoom_factor
-            end_y = center_position[1] + ray_length * math.sin(-ray_angle) * zoom_factor
-            return end_x, end_y
+        def detect_color_change(start_pos, end_pos, target_color):
+            x1, y1 = start_pos
+            x2, y2 = end_pos
+
+            # Calculer la distance en pixels
+            distance = int(((x2 - x1)**2 + (y2 - y1)**2) ** 0.5)
+
+            # Parcourir chaque point le long de la ligne pour détecter le changement de couleur
+            for i in range(distance):
+                # Calculer les coordonnées actuelles le long de la ligne
+                x = int(x1 + (x2 - x1) * i / distance)
+                y = int(y1 + (y2 - y1) * i / distance)
+
+                # Obtenir la couleur au point actuel
+                color_at_point = screen.get_at((x, y))
+
+                # Vérifier si la couleur correspond à la couleur cible
+                if color_at_point == target_color:
+                    return (x, y)  # Retourner le point exact où la couleur change vers vert
+
+            return end_pos[0], end_pos[1]  # Si aucun changement n'est détecté, retourner None
+        
+        def cast_ray(center_position, ray_angle, zoom_factor):
+            ray_max_length = 100
+            end_x = center_position[0] + ray_max_length * math.cos(-ray_angle) * zoom_factor
+            end_y = center_position[1] + ray_max_length * math.sin(-ray_angle) * zoom_factor
+            return detect_color_change(center_position, (end_x, end_y), background)
     
         for angle_offset in self.rays_angle_const:
             ray_angle =  math.radians(self.angle) + angle_offset
             end_x, end_y = cast_ray(center,ray_angle, zoom_factor)
-            pygame.draw.line(screen, (255,0,0), center, (end_x, end_y), 2)
+            pygame.draw.line(screen, (255,0,255), center, (end_x, end_y), 2)
+            pygame.draw.circle(screen, (255,0,255), (end_x, end_y), 5)
         
     
