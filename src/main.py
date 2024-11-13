@@ -2,6 +2,10 @@ import sys
 import pygame
 from Car import Car
 
+# Variables globales pour le zoom et le décalage
+zoom_factor = 2.5
+zoom_step = 0.1
+
 def handle_events():
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
@@ -19,12 +23,25 @@ def adjust_zoom(event):
         zoom_factor -= zoom_step
 
 def update_screen(screen, map, car):
+    # Calcul du décalage pour centrer la voiture
+    offset_x = car.x * zoom_factor - screen.get_width() / 2
+    offset_y = car.y * zoom_factor - screen.get_height() / 2
+
+    # Redimensionnement de la carte pour le zoom
     zoomed_map = pygame.transform.scale(
-        map, (int(800 * zoom_factor), int(600 * zoom_factor))
+        map, (int(map.get_width() * zoom_factor), int(map.get_height() * zoom_factor))
     )
+
+    # Effacer l'écran
     screen.fill((0, 0, 0))
-    screen.blit(zoomed_map, (0, 0))
-    car.update(screen)
+
+    # Blit de la carte avec décalage pour centrer la voiture
+    screen.blit(zoomed_map, (-offset_x, -offset_y))
+
+    # Mise à jour et affichage de la voiture avec zoom
+    car.update(screen, offset_x, offset_y, zoom_factor)
+
+    # Rafraîchir l'écran
     pygame.display.flip()
 
 def main():
@@ -40,7 +57,5 @@ def main():
         update_screen(screen, map, car)
         clock.tick(60)
 
-zoom_factor = 2.5
-zoom_step = 0.1
 main()
-
+pygame.quit()

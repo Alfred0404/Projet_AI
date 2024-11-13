@@ -4,9 +4,9 @@ import pygame
 
 class Car:
     def __init__(self):
-        self.x = 400
+        self.x = 223
         self.y = 300
-        self.height = 50
+        self.height = 30
         self.width = 50
         self.angle = 0
         self.wheel_angle = 0
@@ -14,35 +14,46 @@ class Car:
         self.speed = 0
         self.acceleration = 0.1
         self.max_speed = 5
-        self.turning_radius = 25
-        self.max_wheel_angle = 35
+        self.turning_radius = 15
+        self.max_wheel_angle = 25
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
 
-    def update(self, screen):
+    def update(self, screen, offset_x, offset_y, zoom_factor):
         self.move()
-        self.display(screen)
+        self.display(screen, offset_x, offset_y, zoom_factor)
 
-    def display(self, screen):
-        rotated_image = pygame.transform.rotate(self.original_image, self.angle)
-        self.image = rotated_image
-        rect = self.image.get_rect(center=(self.x, self.y))
-        screen.blit(self.image, rect.topleft)
+    def display(self, screen, offset_x, offset_y, zoom_factor):
+        # D'abord, redimensionner l'image originale avec le zoom
+        scaled_original = pygame.transform.scale(
+            self.original_image,
+            (int(self.height * zoom_factor), int(self.width * zoom_factor))
+        )
+
+        # Ensuite, faire pivoter l'image redimensionnée
+        rotated_image = pygame.transform.rotate(scaled_original, self.angle)
+
+        # Calculer la position centrale en tenant compte du décalage
+        image_rect = rotated_image.get_rect(
+            center=(self.x * zoom_factor - offset_x, self.y * zoom_factor - offset_y)
+        )
+
+        # Afficher l'image
+        screen.blit(rotated_image, image_rect.topleft)
 
     def move(self):
-        # Calculate the rotation and displacement based on the wheel angle
+        # Calcul de la rotation et du déplacement en fonction de l'angle de roue
         if self.wheel_angle != 0:
             turning_radius = self.height / math.tan(math.radians(self.wheel_angle))
             angular_velocity = self.speed / turning_radius
             self.angle += math.degrees(angular_velocity)
 
-        # Move the car based on its angle
+        # Déplacement de la voiture en fonction de son angle
         self.x -= math.sin(math.radians(self.angle)) * self.speed
         self.y -= math.cos(math.radians(self.angle)) * self.speed
 
-        # Handle keyboard input
+        # Gestion des touches pour accélérer, freiner et tourner
         keys = pygame.key.get_pressed()
-
         if keys[pygame.K_UP]:
             self.accelerate()
         if keys[pygame.K_DOWN]:
@@ -52,17 +63,17 @@ class Car:
                 self.decelerate()
             elif self.speed < 0:
                 self.accelerate()
-
         if keys[pygame.K_RIGHT]:
             self.turn_right()
         elif keys[pygame.K_LEFT]:
             self.turn_left()
+        elif keys[pygame.K_SPACE]:
+            self.reset()
         else:
             # Recentre les roues progressivement
             self.center_wheels()
 
     def center_wheels(self):
-        # Recentre les roues vers zéro
         if self.wheel_angle > 0:
             self.wheel_angle -= self.angle_speed
             if self.wheel_angle < 0:
@@ -74,26 +85,21 @@ class Car:
 
     def accelerate(self):
         self.speed += self.acceleration
-
         if self.speed > self.max_speed:
             self.speed = self.max_speed
 
     def brake(self):
         self.speed -= self.acceleration
-
         if self.speed < -self.max_speed:
             self.speed = -self.max_speed
 
     def decelerate(self):
         if self.speed > 0:
             self.speed -= self.acceleration / 2
-
             if self.speed < 0:
                 self.speed = 0
-
         elif self.speed < 0:
             self.speed += self.acceleration / 2
-
             if self.speed > 0:
                 self.speed = 0
 
@@ -104,3 +110,10 @@ class Car:
     def turn_left(self):
         if self.wheel_angle < self.max_wheel_angle:
             self.wheel_angle += self.angle_speed
+
+    def reset(self):
+        self.x = 400
+        self.y = 300
+        self.angle = 0
+        self.wheel_angle = 0
+        self.speed = 0
