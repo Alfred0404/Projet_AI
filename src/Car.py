@@ -1,6 +1,7 @@
 import math
 
 import pygame
+import time
 
 from config import *
 
@@ -21,6 +22,7 @@ class Car:
         self.max_wheel_angle = 25
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
+
         self.rays_angle_const = [
             math.radians(90),
             math.radians(45),
@@ -29,6 +31,8 @@ class Car:
             math.radians(180),
         ]
         self.score = 0
+        self.start_time = time.time()
+        self.time_alive = 0
 
     def update(self, screen, offset_x, offset_y, zoom_factor):
         self.move()
@@ -127,11 +131,6 @@ class Car:
             if screen.get_at(corner) == background:
                 self.reset()
 
-        # Afficher l'image
-
-        for corner in corners:
-            if screen.get_at(corner) == background:
-                self.reset()
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -210,6 +209,12 @@ class Car:
         self.wheel_angle = 0
         self.speed = 0
         self.score = 0
+
+        end_time = time.time()
+        self.time_alive = end_time - self.start_time
+        print(self.time_alive)
+        self.time_alive = 0
+        self.start_time = time.time()
 
     def update_score(self):
         self.score += self.speed
