@@ -18,6 +18,8 @@ class Car:
         self.max_wheel_angle = 25
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
+        self.rays_angle_const = [math.radians(90), math.radians(45), math.radians(135), math.radians(0), math.radians(180)]
+        
 
     def update(self, screen, offset_x, offset_y, zoom_factor):
         self.move()
@@ -37,9 +39,13 @@ class Car:
         image_rect = rotated_image.get_rect(
             center=(self.x * zoom_factor - offset_x, self.y * zoom_factor - offset_y)
         )
-
         # Afficher l'image
         screen.blit(rotated_image, image_rect.topleft)
+        pygame.draw.circle(screen, (0, 0, 255), image_rect.center, 5)
+
+        # Afficher les rayons de vue
+        self.display_rays(screen,image_rect.center, zoom_factor)
+        
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -117,3 +123,18 @@ class Car:
         self.angle = 0
         self.wheel_angle = 0
         self.speed = 0
+        
+    def display_rays(self, screen, center, zoom_factor):
+        # Afficher les rayons de vue
+        def cast_ray(self,center_position, ray_angle, zoom_factor):
+            ray_length = 50
+            end_x = center_position[0] + ray_length * math.cos(-ray_angle) * zoom_factor
+            end_y = center_position[1] + ray_length * math.sin(-ray_angle) * zoom_factor
+            return end_x, end_y
+    
+        for angle_offset in self.rays_angle_const:
+            ray_angle =  math.radians(self.angle) + angle_offset
+            end_x, end_y = cast_ray(center,ray_angle, zoom_factor)
+            pygame.draw.line(screen, (255,0,0), center, (end_x, end_y), 2)
+        
+    
