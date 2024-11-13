@@ -1,12 +1,11 @@
 import math
-
 import pygame
 
 
 class Car:
     def __init__(self):
-        self.x = 100
-        self.y = 50
+        self.x = 400
+        self.y = 300
         self.height = 50
         self.width = 50
         self.angle = 0
@@ -41,18 +40,6 @@ class Car:
         self.x -= math.sin(math.radians(self.angle)) * self.speed
         self.y -= math.cos(math.radians(self.angle)) * self.speed
 
-        # Keep the car within the screen boundaries
-        if (
-            self.x < self.width / 2
-            or self.x > 800 - self.width / 2
-            or self.y < self.height / 2
-            or self.y > 600 - self.height / 2
-        ):
-            self.speed = 0
-        else:
-            self.x = max(self.width / 2, min(self.x, 800 - self.width / 2))
-            self.y = max(self.height / 2, min(self.y, 600 - self.height / 2))
-
         # Handle keyboard input
         keys = pygame.key.get_pressed()
 
@@ -68,9 +55,22 @@ class Car:
 
         if keys[pygame.K_RIGHT]:
             self.turn_right()
-        if keys[pygame.K_LEFT]:
+        elif keys[pygame.K_LEFT]:
             self.turn_left()
+        else:
+            # Recentre les roues progressivement
+            self.center_wheels()
 
+    def center_wheels(self):
+        # Recentre les roues vers zéro
+        if self.wheel_angle > 0:
+            self.wheel_angle -= self.angle_speed
+            if self.wheel_angle < 0:
+                self.wheel_angle = 0
+        elif self.wheel_angle < 0:
+            self.wheel_angle += self.angle_speed
+            if self.wheel_angle > 0:
+                self.wheel_angle = 0
 
     def accelerate(self):
         self.speed += self.acceleration
@@ -104,23 +104,3 @@ class Car:
     def turn_left(self):
         if self.wheel_angle < self.max_wheel_angle:
             self.wheel_angle += self.angle_speed
-
-    def steer_right(self):
-        if self.wheel_angle > -self.max_wheel_angle:
-            self.wheel_angle -= self.angle_speed
-
-    def steer_left(self):
-        if self.wheel_angle < self.max_wheel_angle:
-            self.wheel_angle += self.angle_speed
-
-    def move_forward(self):
-        self.speed += self.acceleration
-
-        if self.speed > self.max_speed:
-            self.speed = self.max_speed
-
-    def move_backward(self):
-        self.speed -= self.acceleration
-
-        if self.speed < -self.max_speed / 2:
-            self.speed = -self.max_speed / 2
