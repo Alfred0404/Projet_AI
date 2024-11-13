@@ -8,20 +8,22 @@ from config import *
 
 class Car:
     def __init__(self):
-        self.x = 223
-        self.y = 300
+        self.x = initial_x
+        self.y = initial_y
         self.height = 30
         self.width = 50
         self.angle = 0
         self.wheel_angle = 0
-        self.angle_speed = 5
+        self.angle_speed = 4
         self.speed = 0
         self.acceleration = 0.1
         self.max_speed = 5
-        self.turning_radius = 15
-        self.max_wheel_angle = 25
+        self.turning_radius = 10
+        self.max_wheel_angle = 20
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
+        self.image_rect = 0
+        self.cross_finish = False
 
         self.rays_angle_const = [
             math.radians(90),
@@ -33,11 +35,17 @@ class Car:
         self.score = 0
         self.start_time = time.time()
         self.time_alive = 0
+        self.laps = 0
+        self.list_pos_10 = []
 
     def update(self, screen, offset_x, offset_y, zoom_factor):
         self.move()
         self.update_score()
         self.display(screen, offset_x, offset_y, zoom_factor)
+        self.time_alive = time.time() - self.start_time
+
+        self.get_pos(offset_x, offset_y)
+        self.cross_finish_line()
 
     def display(self, screen, offset_x, offset_y, zoom_factor):
         # D'abord, redimensionner l'image originale avec le zoom
@@ -50,19 +58,19 @@ class Car:
         rotated_image = pygame.transform.rotate(scaled_original, self.angle)
 
         # Calculer la position centrale en tenant compte du décalage
-        image_rect = rotated_image.get_rect(
+        self.image_rect = rotated_image.get_rect(
             center=(self.x * zoom_factor - offset_x, self.y * zoom_factor - offset_y)
         )
         front_right = (
             int(
-                image_rect.centerx
+                self.image_rect.centerx
                 + (self.height + 13)
                 // 2
                 * math.cos(math.radians(self.angle) + math.pi / 3)
                 * zoom_factor
             ),
             int(
-                image_rect.centery
+                self.image_rect.centery
                 - (self.height + 13)
                 // 2
                 * math.sin(math.radians(self.angle) + math.pi / 3)
@@ -71,14 +79,14 @@ class Car:
         )
         back_left = (
             int(
-                image_rect.centerx
+                self.image_rect.centerx
                 - (self.height + 13)
                 // 2
                 * math.cos(math.radians(self.angle) + math.pi / 3)
                 * zoom_factor
             ),
             int(
-                image_rect.centery
+                self.image_rect.centery
                 + (self.height + 13)
                 // 2
                 * math.sin(math.radians(self.angle) + math.pi / 3)
@@ -88,14 +96,14 @@ class Car:
 
         back_right = (
             int(
-                image_rect.centerx
+                self.image_rect.centerx
                 + (self.height + 13)
                 // 2
                 * math.cos(math.radians(self.angle) - math.pi / 3)
                 * zoom_factor
             ),
             int(
-                image_rect.centery
+                self.image_rect.centery
                 - (self.height + 13)
                 // 2
                 * math.sin(math.radians(self.angle) - math.pi / 3)
@@ -104,14 +112,14 @@ class Car:
         )
         front_left = (
             int(
-                image_rect.centerx
+                self.image_rect.centerx
                 + (self.height + 13)
                 // 2
                 * math.cos(math.radians(self.angle) - 4 * math.pi / 3)
                 * zoom_factor
             ),
             int(
-                image_rect.centery
+                self.image_rect.centery
                 - (self.height + 13)
                 // 2
                 * math.sin(math.radians(self.angle) - 4 * math.pi / 3)
@@ -119,17 +127,19 @@ class Car:
             ),
         )
 
-        corners = [image_rect.center, front_right, back_left, back_right, front_left]
+        corners = [self.image_rect.center, front_right, back_left, back_right, front_left]
 
-        screen.blit(rotated_image, image_rect.topleft)
+        screen.blit(rotated_image, self.image_rect.topleft)
         # pygame.draw.circle(screen, (0, 0, 255), image_rect.center, 5)
 
         # Afficher les rayons de vue
-        self.display_rays(screen, image_rect.center, zoom_factor)
+        self.display_rays(screen, self.image_rect.center, zoom_factor)
 
         for corner in corners:
             if screen.get_at(corner) == background:
                 self.reset()
+                
+        self.display_time(screen)
 
 
     def move(self):
@@ -166,11 +176,11 @@ class Car:
 
     def center_wheels(self):
         if self.wheel_angle > 0:
-            self.wheel_angle -= self.angle_speed
+            self.wheel_angle -= self.angle_speed - 1
             if self.wheel_angle < 0:
                 self.wheel_angle = 0
         elif self.wheel_angle < 0:
-            self.wheel_angle += self.angle_speed
+            self.wheel_angle += self.angle_speed - 1
             if self.wheel_angle > 0:
                 self.wheel_angle = 0
 
@@ -212,13 +222,12 @@ class Car:
 
         end_time = time.time()
         self.time_alive = end_time - self.start_time
-        print(self.time_alive)
         self.time_alive = 0
         self.start_time = time.time()
 
     def update_score(self):
         self.score += self.speed
-        print(f"Agent score: {round(self.score, 2)}")
+        #print(f"Agent score: {round(self.score, 2)}")
 
     def display_rays(self, screen, center, zoom_factor):
         # Afficher les rayons de vue
@@ -265,3 +274,28 @@ class Car:
             end_x, end_y = cast_ray(center, ray_angle, zoom_factor)
             pygame.draw.line(screen, (255, 0, 255), center, (end_x, end_y), 2)
             pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
+    
+    def display_time(self, screen):
+        font = pygame.font.Font(None, 36)
+        text = font.render(f"Time alive: {round(self.time_alive, 2)}", True, (255, 255, 255))
+        screen.blit(text, (10, 10))
+        text = font.render(f"Laps: {self.laps}", True, (255, 255, 255))
+        screen.blit(text, (10, 50))
+    
+    def get_pos(self, offset_x, offset_y):
+        if len(self.list_pos_10) > 2:
+            self.list_pos_10.pop(0)
+        self.list_pos_10.append((int(self.x + offset_x + 200), int(self.y + offset_y)))
+
+    
+    def cross_finish_line(self):
+        if (finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
+        and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
+        and self.list_pos_10[0][1] > finish_line[0][1] >= self.list_pos_10[-1][1]
+        and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]):
+            if self.cross_finish == False:
+                self.laps += 1
+                self.cross_finish = True
+            else:
+                self.cross_finish = False
+            

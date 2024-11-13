@@ -23,6 +23,8 @@ def adjust_zoom(event):
     elif event.key == pygame.K_MINUS and zoom_factor > zoom_step:
         zoom_factor -= zoom_step
 
+def display_finish_line(screen):
+    pygame.draw.line(screen, (255, 255, 0), finish_line[0], finish_line[1], 5)
 
 def update_screen(screen, map, car):
     # Calcul du décalage pour centrer la voiture
@@ -36,14 +38,14 @@ def update_screen(screen, map, car):
 
     # Effacer l'écran
     screen.fill(background)
-
+    display_finish_line(zoomed_map)
     # Blit de la carte avec décalage pour centrer la voiture
     screen.blit(zoomed_map, (-offset_x, -offset_y))
 
     # Mise à jour et affichage de la voiture avec zoom
     car.update(screen, offset_x, offset_y, zoom_factor)
-
     # Rafraîchir l'écran
+    
     pygame.display.flip()
     
 def data_recovery(score, time):
