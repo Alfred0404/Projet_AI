@@ -1,6 +1,7 @@
 import math
 
 import pygame
+import time
 
 from config import *
 
@@ -22,6 +23,8 @@ class Car:
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
         self.rays_angle_const = [math.radians(90), math.radians(45), math.radians(135), math.radians(0), math.radians(180)]
+        self.start_time = time.time()
+        self.time_alive = 0
         
 
     def update(self, screen, offset_x, offset_y, zoom_factor):
@@ -121,13 +124,6 @@ class Car:
             if screen.get_at(corner) == background:
                 self.reset()
 
-        # Afficher l'image
-
-        for corner in corners:
-            if screen.get_at(corner) == background:
-                self.reset()
-
-        # Afficher l'image
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -205,6 +201,13 @@ class Car:
         self.angle = 0
         self.wheel_angle = 0
         self.speed = 0
+        end_time = time.time()
+        self.time_alive = end_time - self.start_time 
+        print(self.time_alive)
+        self.time_alive = 0
+        self.start_time = time.time()
+        
+        
         
     def display_rays(self, screen, center, zoom_factor):
         # Afficher les rayons de vue
