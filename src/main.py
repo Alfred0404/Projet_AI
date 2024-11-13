@@ -64,7 +64,7 @@ def main():
         handle_events()
         update_screen(screen, map, car)
         clock.tick(60)
-    print(data_recovery(car.score, car.time_alive))
+
 
 
 

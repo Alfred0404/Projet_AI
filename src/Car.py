@@ -14,10 +14,10 @@ class Car:
         self.width = 50
         self.angle = 0
         self.wheel_angle = 0
-        self.angle_speed = 4
+        self.angle_speed = 3
         self.speed = 0
         self.acceleration = 0.1
-        self.max_speed = 5
+        self.max_speed = 7
         self.turning_radius = 10
         self.max_wheel_angle = 20
         self.original_image = pygame.image.load("./assets/car.png")
@@ -152,20 +152,23 @@ class Car:
         self.x -= math.sin(math.radians(self.angle)) * self.speed
         self.y -= math.cos(math.radians(self.angle)) * self.speed
 
+        self.max_wheel_angle = 20/2 * (2 - self.speed / self.max_speed)
+        self.angle_speed = 5/2 * (2 - self.speed / self.max_speed)
+
         # Gestion des touches pour accélérer, freiner et tourner
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] or keys[pygame.K_z]:
             self.accelerate()
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.brake()
-        if not keys[pygame.K_UP] and not keys[pygame.K_DOWN]:
+        if not keys[pygame.K_UP] and not keys[pygame.K_DOWN] and not keys[pygame.K_z] and not keys[pygame.K_s]:
             if self.speed > 0:
                 self.decelerate()
             elif self.speed < 0:
                 self.accelerate()
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.turn_right()
-        elif keys[pygame.K_LEFT]:
+        elif keys[pygame.K_LEFT] or keys[pygame.K_q]:
             self.turn_left()
         elif keys[pygame.K_SPACE]:
             self.reset()
@@ -202,7 +205,7 @@ class Car:
             self.speed += self.acceleration / 2
             if self.speed > 0:
                 self.speed = 0
-
+      
     def turn_right(self):
         if self.wheel_angle > -self.max_wheel_angle:
             self.wheel_angle -= self.angle_speed
@@ -218,7 +221,7 @@ class Car:
         self.wheel_angle = 0
         self.speed = 0
         self.score = 0
-
+        self.laps = 0
         end_time = time.time()
         self.time_alive = end_time - self.start_time
         self.time_alive = 0
