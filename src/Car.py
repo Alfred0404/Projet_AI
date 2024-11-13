@@ -1,5 +1,8 @@
 import math
+
 import pygame
+
+from config import *
 
 
 class Car:
@@ -27,7 +30,7 @@ class Car:
         # D'abord, redimensionner l'image originale avec le zoom
         scaled_original = pygame.transform.scale(
             self.original_image,
-            (int(self.height * zoom_factor), int(self.width * zoom_factor))
+            (int(self.height * zoom_factor - 20), int(self.width * zoom_factor - 20)),
         )
 
         # Ensuite, faire pivoter l'image redimensionnée
@@ -38,8 +41,81 @@ class Car:
             center=(self.x * zoom_factor - offset_x, self.y * zoom_factor - offset_y)
         )
 
-        # Afficher l'image
+        front_right = (
+            int(
+                image_rect.centerx
+                + (self.height + 13)
+                // 2
+                * math.cos(math.radians(self.angle) + math.pi / 3)
+                * zoom_factor
+            ),
+            int(
+                image_rect.centery
+                - (self.height + 13)
+                // 2
+                * math.sin(math.radians(self.angle) + math.pi / 3)
+                * zoom_factor
+            ),
+        )
+        back_left = (
+            int(
+                image_rect.centerx
+                - (self.height + 13)
+                // 2
+                * math.cos(math.radians(self.angle) + math.pi / 3)
+                * zoom_factor
+            ),
+            int(
+                image_rect.centery
+                + (self.height + 13)
+                // 2
+                * math.sin(math.radians(self.angle) + math.pi / 3)
+                * zoom_factor
+            ),
+        )
+
+        back_right = (
+            int(
+                image_rect.centerx
+                + (self.height + 13)
+                // 2
+                * math.cos(math.radians(self.angle) - math.pi / 3)
+                * zoom_factor
+            ),
+            int(
+                image_rect.centery
+                - (self.height + 13)
+                // 2
+                * math.sin(math.radians(self.angle) - math.pi / 3)
+                * zoom_factor
+            ),
+        )
+        front_left = (
+            int(
+                image_rect.centerx
+                + (self.height + 13)
+                // 2
+                * math.cos(math.radians(self.angle) - 4 * math.pi / 3)
+                * zoom_factor
+            ),
+            int(
+                image_rect.centery
+                - (self.height + 13)
+                // 2
+                * math.sin(math.radians(self.angle) - 4 * math.pi / 3)
+                * zoom_factor
+            ),
+        )
+
+        corners = [image_rect.center, front_right, back_left, back_right, front_left]
+
         screen.blit(rotated_image, image_rect.topleft)
+
+        for corner in corners:
+            if screen.get_at(corner) == background:
+                self.reset()
+
+        # Afficher l'image
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -112,8 +188,8 @@ class Car:
             self.wheel_angle += self.angle_speed
 
     def reset(self):
-        self.x = 400
-        self.y = 300
+        self.x = initial_x
+        self.y = initial_y
         self.angle = 0
         self.wheel_angle = 0
         self.speed = 0
