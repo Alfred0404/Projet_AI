@@ -3,7 +3,7 @@ import math
 import pygame
 import time
 
-from config import *
+from config_game import *
 
 
 class Car:
@@ -24,7 +24,8 @@ class Car:
         self.image = self.original_image
         self.image_rect = None
         self.cross_finish = False
-
+        self.distance_rays = [0, 0, 0, 0, 0]
+        self.alive = True
         self.rays_angle_const = [
             math.radians(90),
             math.radians(45),
@@ -41,7 +42,7 @@ class Car:
     def update(self, screen, ratio):
         self.move()
         self.update_score()
-        self.display(screen, ratio)
+        #self.display(screen, ratio)
         self.time_alive = time.time() - self.start_time
 
         self.get_pos()
@@ -120,6 +121,7 @@ class Car:
             # pygame.draw.circle(screen, (0, 0, 255), corner, 3)
             try:
                 if screen.get_at(corner) == background:
+                    #print(self.score)
                     self.reset()
             except IndexError:
                 pass
@@ -144,8 +146,8 @@ class Car:
         screen.blit(rotated_image, self.image_rect.topleft)
         # Afficher les rayons de vue
         self.display_rays(screen, self.image_rect.center)
-        self.display_time(screen)
-        self.display_laps(screen)
+        #self.display_time(screen)
+        #self.display_laps(screen)
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -221,18 +223,18 @@ class Car:
             self.wheel_angle += self.angle_speed
 
     def reset(self):
-        self.x = initial_x
-        self.y = initial_y
-        self.angle = 0
-        self.wheel_angle = 0
-        self.speed = 0
-        self.score = 0
-        self.laps = 0
-
-        end_time = time.time()
-        self.time_alive = end_time - self.start_time
-        self.time_alive = 0
-        self.start_time = time.time()
+        #self.x = initial_x
+        #self.y = initial_y
+        #self.angle = 0
+        #self.wheel_angle = 0
+        #self.speed = 0
+        #self.score = 0
+        #self.laps = 0
+        self.alive = False
+        #end_time = time.time()
+        #self.time_alive = end_time - self.start_time
+        #self.time_alive = 0
+        #self.start_time = time.time()
 
     def update_score(self):
         self.score += self.speed
@@ -280,12 +282,13 @@ class Car:
                 center_position[1] + ray_max_length * math.sin(-ray_angle)
             )
             return detect_color_change(center_position, (end_x, end_y), background)
-
-        for angle_offset in self.rays_angle_const:
+        for i, angle_offset in enumerate(self.rays_angle_const):
             ray_angle = math.radians(self.angle) + angle_offset
-            end_x, end_y = cast_ray(center, ray_angle, )
-            pygame.draw.line(screen, (255, 0, 255), center, (end_x, end_y), 2)
-            pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
+            end_x, end_y = cast_ray(center, ray_angle)
+            self.distance_rays[i] = (((end_x - center[0]) ** 2 + (end_y - center[1]) ** 2) ** 0.5)
+            #pygame.draw.line(screen, (255, 0, 255), center, (end_x, end_y), 2)
+            #pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
+        
 
     def display_time(self, screen):
         font = pygame.font.Font(None, 36)
@@ -316,3 +319,4 @@ class Car:
                 self.cross_finish = True
             else:
                 self.cross_finish = False
+        

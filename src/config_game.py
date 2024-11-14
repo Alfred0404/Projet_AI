@@ -10,8 +10,8 @@ zoom_step = 0.1
 background = (50, 150, 50)
 
 # car variables
-initial_x = 180
-initial_y = 240
+initial_x = 190
+initial_y = 200
 
-finish_line = ((150, 150), (250, 150))
+finish_line = ((150, initial_y), (250, initial_y))
 finish_line_color = (255, 0, 0)
