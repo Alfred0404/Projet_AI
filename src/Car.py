@@ -10,19 +10,19 @@ class Car:
     def __init__(self):
         self.x = initial_x
         self.y = initial_y
-        self.height = 30
-        self.width = 50
+        self.height = 50
+        self.width = 28
         self.angle = 0
         self.wheel_angle = 0
-        self.angle_speed = 3
+        self.angle_speed = 4
         self.speed = 0
         self.acceleration = 0.1
-        self.max_speed = 7
+        self.max_speed = 5
         self.turning_radius = 10
         self.max_wheel_angle = 20
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
-        self.image_rect = 0
+        self.image_rect = None
         self.cross_finish = False
 
         self.rays_angle_const = [
@@ -38,20 +38,97 @@ class Car:
         self.laps = 0
         self.list_pos_10 = []
 
-    def update(self, screen, offset_x, offset_y, zoom_factor):
+    def update(self, screen, ratio):
         self.move()
         self.update_score()
-        self.display(screen, offset_x, offset_y, zoom_factor)
+        self.display(screen, ratio)
         self.time_alive = time.time() - self.start_time
 
-        self.get_pos(offset_x, offset_y)
+        self.get_pos()
         self.cross_finish_line()
 
-    def display(self, screen, offset_x, offset_y, zoom_factor):
+    def detect_collision(self, screen):
+        front_right = (
+            int(
+                self.image_rect.centerx
+                + (self.height)
+                // 2
+                * math.cos(math.radians(self.angle) + math.pi / 3)
+            ),
+            int(
+                self.image_rect.centery
+                - (self.height)
+                // 2
+                * math.sin(math.radians(self.angle) + math.pi / 3)
+            ),
+        )
+        back_left = (
+            int(
+                self.image_rect.centerx
+                - (self.height)
+                // 2
+                * math.cos(math.radians(self.angle) + math.pi / 3 + 0.05)
+            ),
+            int(
+                self.image_rect.centery
+                + (self.height)
+                // 2
+                * math.sin(math.radians(self.angle) + math.pi / 3)
+            ),
+        )
+
+        back_right = (
+            int(
+                self.image_rect.centerx
+                + (self.height)
+                // 2
+                * math.cos(math.radians(self.angle) - math.pi / 3)
+            ),
+            int(
+                self.image_rect.centery
+                - (self.height)
+                // 2
+                * math.sin(math.radians(self.angle) - math.pi / 3)
+            ),
+        )
+        front_left = (
+            int(
+                self.image_rect.centerx
+                + (self.height)
+                // 2
+                * math.cos(math.radians(self.angle) - 4 * math.pi / 3 - 0.05)
+            ),
+            int(
+                self.image_rect.centery
+                - (self.height)
+                // 2
+                * math.sin(math.radians(self.angle) - 4 * math.pi / 3)
+            ),
+        )
+
+        corners = [
+            self.image_rect.center,
+            front_right,
+            back_left,
+            back_right,
+            front_left,
+        ]
+
+        # pygame.draw.circle(screen, (0, 0, 255), image_rect.center, 5)
+
+        for corner in corners:
+            # pygame.draw.circle(screen, (0, 0, 255), corner, 3)
+            try:
+                if screen.get_at(corner) == background:
+                    self.reset()
+            except IndexError:
+                pass
+
+    def display(self, screen, ratio):
         # D'abord, redimensionner l'image originale avec le zoom
         scaled_original = pygame.transform.scale(
             self.original_image,
-            (int(self.height * zoom_factor - 20), int(self.width * zoom_factor - 20)),
+            (self.width, self.height)
         )
 
         # Ensuite, faire pivoter l'image redimensionnée
@@ -59,87 +136,16 @@ class Car:
 
         # Calculer la position centrale en tenant compte du décalage
         self.image_rect = rotated_image.get_rect(
-            center=(self.x * zoom_factor - offset_x, self.y * zoom_factor - offset_y)
-        )
-        front_right = (
-            int(
-                self.image_rect.centerx
-                + (self.height + 8)
-                // 2
-                * math.cos(math.radians(self.angle) + math.pi / 3)
-                * zoom_factor
-            ),
-            int(
-                self.image_rect.centery
-                - (self.height + 8)
-                // 2
-                * math.sin(math.radians(self.angle) + math.pi / 3)
-                * zoom_factor
-            ),
-        )
-        back_left = (
-            int(
-                self.image_rect.centerx
-                - (self.height + 8)// 2
-                * math.cos(math.radians(self.angle) + math.pi / 3 + 0.05)
-                * zoom_factor
-            ),
-            int(
-                self.image_rect.centery
-                + (self.height + 8)// 2
-                * math.sin(math.radians(self.angle) + math.pi / 3)
-                * zoom_factor
-            ),
+            center=(self.x, self.y)
         )
 
-        back_right = (
-            int(
-
-                self.image_rect.centerx
-                + (self.height + 8)// 2
-                * math.cos(math.radians(self.angle) - math.pi / 3)
-                * zoom_factor
-            ),
-            int(
-                self.image_rect.centery
-                - (self.height + 8)// 2
-                * math.sin(math.radians(self.angle) - math.pi / 3)
-                * zoom_factor
-            ),
-        )
-        front_left = (
-            int(
-                self.image_rect.centerx
-                + (self.height + 8)// 2
-                * math.cos(math.radians(self.angle) - 4 * math.pi / 3 - 0.05)
-                * zoom_factor
-            ),
-            int(
-                self.image_rect.centery
-                - (self.height + 8)
-                // 2
-                * math.sin(math.radians(self.angle) - 4 * math.pi / 3)
-                * zoom_factor
-            ),
-        )
-
-        corners = [self.image_rect.center, front_right, back_left, back_right, front_left]
-
+        self.detect_collision(screen)
 
         screen.blit(rotated_image, self.image_rect.topleft)
-        # pygame.draw.circle(screen, (0, 0, 255), image_rect.center, 5)
-
-
         # Afficher les rayons de vue
-        self.display_rays(screen, self.image_rect.center, zoom_factor)
-
-        for corner in corners:
-            # pygame.draw.circle(screen, (0, 0, 255), corner, 3)
-            if screen.get_at(corner) == background:
-                self.reset()
-                
+        self.display_rays(screen, self.image_rect.center)
         self.display_time(screen)
-
+        self.display_laps(screen)
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -152,23 +158,23 @@ class Car:
         self.x -= math.sin(math.radians(self.angle)) * self.speed
         self.y -= math.cos(math.radians(self.angle)) * self.speed
 
-        self.max_wheel_angle = 20/2 * (2 - self.speed / self.max_speed)
-        self.angle_speed = 5/2 * (2 - self.speed / self.max_speed)
+        self.max_wheel_angle = 40 / 2 * (2 - self.speed / self.max_speed)
+        self.angle_speed =10 / 2 * (2 - self.speed / self.max_speed)
 
         # Gestion des touches pour accélérer, freiner et tourner
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP] or keys[pygame.K_z]:
+        if keys[pygame.K_UP]:
             self.accelerate()
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        if keys[pygame.K_DOWN]:
             self.brake()
-        if not keys[pygame.K_UP] and not keys[pygame.K_DOWN] and not keys[pygame.K_z] and not keys[pygame.K_s]:
+        if not keys[pygame.K_UP] and not keys[pygame.K_DOWN]:
             if self.speed > 0:
                 self.decelerate()
             elif self.speed < 0:
                 self.accelerate()
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        if keys[pygame.K_RIGHT]:
             self.turn_right()
-        elif keys[pygame.K_LEFT] or keys[pygame.K_q]:
+        elif keys[pygame.K_LEFT]:
             self.turn_left()
         elif keys[pygame.K_SPACE]:
             self.reset()
@@ -205,7 +211,7 @@ class Car:
             self.speed += self.acceleration / 2
             if self.speed > 0:
                 self.speed = 0
-      
+
     def turn_right(self):
         if self.wheel_angle > -self.max_wheel_angle:
             self.wheel_angle -= self.angle_speed
@@ -222,6 +228,7 @@ class Car:
         self.speed = 0
         self.score = 0
         self.laps = 0
+
         end_time = time.time()
         self.time_alive = end_time - self.start_time
         self.time_alive = 0
@@ -229,9 +236,9 @@ class Car:
 
     def update_score(self):
         self.score += self.speed
-        #print(f"Agent score: {round(self.score, 2)}")
+        # print(f"Agent score: {round(self.score, 2)}")
 
-    def display_rays(self, screen, center, zoom_factor):
+    def display_rays(self, screen, center):
         # Afficher les rayons de vue
         def detect_color_change(start_pos, end_pos, target_color):
             x1, y1 = start_pos
@@ -247,7 +254,10 @@ class Car:
                 y = int(y1 + (y2 - y1) * i / distance)
 
                 # Obtenir la couleur au point actuel
-                color_at_point = screen.get_at((x, y))
+                try:
+                    color_at_point = screen.get_at((x, y))
+                except IndexError:
+                    break
 
                 # Vérifier si la couleur correspond à la couleur cible
                 if color_at_point == target_color:
@@ -261,43 +271,48 @@ class Car:
                 end_pos[1],
             )  # Si aucun changement n'est détecté, retourner None
 
-        def cast_ray(center_position, ray_angle, zoom_factor):
+        def cast_ray(center_position, ray_angle):
             ray_max_length = 100
             end_x = (
-                center_position[0] + ray_max_length * math.cos(-ray_angle) * zoom_factor
+                center_position[0] + ray_max_length * math.cos(-ray_angle)
             )
             end_y = (
-                center_position[1] + ray_max_length * math.sin(-ray_angle) * zoom_factor
+                center_position[1] + ray_max_length * math.sin(-ray_angle)
             )
             return detect_color_change(center_position, (end_x, end_y), background)
 
         for angle_offset in self.rays_angle_const:
             ray_angle = math.radians(self.angle) + angle_offset
-            end_x, end_y = cast_ray(center, ray_angle, zoom_factor)
+            end_x, end_y = cast_ray(center, ray_angle, )
             pygame.draw.line(screen, (255, 0, 255), center, (end_x, end_y), 2)
             pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
-    
+
     def display_time(self, screen):
         font = pygame.font.Font(None, 36)
-        text = font.render(f"Time alive: {round(self.time_alive, 2)}", True, (255, 255, 255))
+        text = font.render(
+            f"Time alive: {round(self.time_alive, 2)}", True, (255, 255, 255)
+        )
         screen.blit(text, (10, 10))
+
+    def display_laps(self, screen):
+        font = pygame.font.Font(None, 36)
         text = font.render(f"Laps: {self.laps}", True, (255, 255, 255))
         screen.blit(text, (10, 50))
-    
-    def get_pos(self, offset_x, offset_y):
+
+    def get_pos(self):
         if len(self.list_pos_10) > 2:
             self.list_pos_10.pop(0)
-        self.list_pos_10.append((int(self.x + offset_x + 200), int(self.y + offset_y)))
+        self.list_pos_10.append((int(self.x), int(self.y)))
 
-    
     def cross_finish_line(self):
-        if (finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
-        and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
-        and self.list_pos_10[0][1] > finish_line[0][1] >= self.list_pos_10[-1][1]
-        and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]):
+        if (
+            finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
+            and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
+            and self.list_pos_10[0][1] > finish_line[0][1] >= self.list_pos_10[-1][1]
+            and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
+        ):
             if self.cross_finish == False:
                 self.laps += 1
                 self.cross_finish = True
             else:
                 self.cross_finish = False
-            
