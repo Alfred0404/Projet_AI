@@ -84,16 +84,13 @@ def create_new_generation_with_best(best_agent, agents, num_agents, mutation_rat
 
     return new_agents
 
-def get_top_3_cars(cars):
-
-    # Filtrer les voitures vivantes
-    living_cars = [car for car in cars if car.alive]
-
-    # Trier les voitures vivantes par score (de la plus haute à la plus basse)
-    sorted_cars = sorted(living_cars, key=lambda car: car.score, reverse=True)
-
-    # Retourner les 3 premières voitures
-    return sorted_cars[:3]
+def get_top_3_cars(cars, podium):
+    """
+    Renvoie les 3 voitures avec les meilleurs scores.
+    """
+    sorted_cars = sorted(cars, key=lambda car: car.score, reverse=True)
+    podium[:] = sorted_cars[:3]
+    return podium
 
 def run_simulation(agents):
     pygame.init()
@@ -101,7 +98,9 @@ def run_simulation(agents):
     game_map = pygame.image.load("./assets/map/map.png")
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
-    cars = [Car(i for i in range(len(agents))) for _ in agents]
+    num_rays = 13
+
+    cars = [Car((i for i in range(len(agents))), num_rays) for _ in agents]
     start_time = pygame.time.get_ticks()  # Temps de début en millisecondes
     list_podium = [cars[0],cars[1],cars[2]]
     car_metrics = {
@@ -121,14 +120,14 @@ def run_simulation(agents):
     while run:
         current_time = pygame.time.get_ticks()
         elapsed_time = (current_time - start_time) / 1000  # Temps écoulé en secondes
-        
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 sys.exit(0)
 
         for i, car in enumerate(cars):
             if car.alive:
-                
+
                 # Mise à jour des métriques
                 metrics = car_metrics[i]
                 metrics["time_alive"] += 1
@@ -150,7 +149,7 @@ def run_simulation(agents):
                     if unique_positions < 10:  # Trop peu de positions uniques
                         car.alive = False
                         continue
-                
+
                 inputs = car.distance_rays
                 outputs = agents[i].network.forward(inputs)
                 action = np.argmax(outputs)
@@ -163,22 +162,23 @@ def run_simulation(agents):
                     car.brake()
 
                 car.update(game_map, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT))
-                
+
                 agents[i].fitness = car.score if car.score > 0 else 0
 
         still_alive = sum(car.alive for car in cars)
 
         # Vérification des conditions pour passer à la génération suivante
-        if still_alive == 0 or elapsed_time >= 20:  # 20 secondes ou tous morts
+        if still_alive == 0 or elapsed_time >= 120:  # 120 secondes ou tous morts
             print(f"Fin de la simulation : {still_alive} voitures en vie, Temps écoulé : {elapsed_time:.2f} sec")
             break
         # Affichage
         screen.fill(background)
         screen.blit(game_map, (10, 10))
-        list_podium = get_top_3_cars(cars)
+        list_podium = get_top_3_cars(cars, list_podium)
+        # print(list_podium[0].ids)
         for car in cars:
             if car.alive:
-                car.display(screen, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT), list_podium)
+                car.display(screen, list_podium)
                 pass
         fps = clock.get_fps()
         fps_text = font.render(f"FPS: {fps:.1f}", True, (255, 255, 255))
@@ -189,8 +189,9 @@ def run_simulation(agents):
 def main():
     num_agents = 30
     max_generations = 200
-    mutation_rate = 0.3
-    agents = [Agent(input_size=5, hidden_size=16, output_size=3) for _ in range(num_agents)]
+    mutation_rate = 0.1
+    num_rays = 13
+    agents = [Agent(input_size=num_rays, hidden_size=16, output_size=3) for _ in range(num_agents)]
 
     best_agent = None
 
