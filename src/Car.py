@@ -9,7 +9,7 @@ from config_game import *
 
 
 class Car:
-    def __init__(self, ids, num_rays=13):
+    def __init__(self, ids, num_rays):
         self.x = initial_x
         self.y = initial_y
         self.ids = ids
@@ -29,7 +29,9 @@ class Car:
         self.cross_finish = False
         self.alive = True
         self.distance_rays = [0 for _ in range(num_rays)]
-        self.rays_angle_const = [math.radians(angle) for angle in range(0, 181, 15)]
+        self.rays_angle_const = [
+            math.radians(angle) for angle in range(0, 181, int(180 / (num_rays - 1)))
+        ]
         self.score = 0
         self.start_time = time.time()
         self.time_alive = 0
@@ -135,18 +137,18 @@ class Car:
             self.original_image,
             (self.width, self.height)
         )
-
-        # Ensuite, faire pivoter l'image redimensionnée
         rotated_image = pygame.transform.rotate(scaled_original, self.angle)
-
         # Calculer la position centrale en tenant compte du décalage
         self.image_rect = rotated_image.get_rect(
             center=(self.x, self.y)
         )
 
-        for i in range(len(list_podium)):
-            if self.ids == list_podium[i].ids:
-                screen.blit(rotated_image, self.image_rect.topleft)
+        is_on_podium = any(self.ids == car.ids for car in list_podium)
+        rotated_image.set_alpha(255 if is_on_podium else 50)
+        screen.blit(rotated_image, self.image_rect)
+
+
+
         # Afficher les rayons de vue
         self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
@@ -312,5 +314,9 @@ class Car:
                 self.score += 100000 / self.time_alive
                 self.score *= 2
                 self.cross_finish = True
+                self.alive = False
+                print(self.time_alive)
+                self.start_time = time.time()
+
             else:
                 self.cross_finish = False

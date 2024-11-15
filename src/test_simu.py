@@ -92,13 +92,12 @@ def get_top_3_cars(cars, podium):
     podium[:] = sorted_cars[:3]
     return podium
 
-def run_simulation(agents):
+def run_simulation(agents, num_rays):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     game_map = pygame.image.load("./assets/map/map.png")
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
-    num_rays = 13
 
     cars = [Car((i for i in range(len(agents))), num_rays) for _ in agents]
     start_time = pygame.time.get_ticks()  # Temps de début en millisecondes
@@ -190,14 +189,14 @@ def main():
     num_agents = 30
     max_generations = 200
     mutation_rate = 0.1
-    num_rays = 13
+    num_rays = 7
     agents = [Agent(input_size=num_rays, hidden_size=16, output_size=3) for _ in range(num_agents)]
 
     best_agent = None
 
     for generation in range(max_generations):
         print(f"Génération {generation}")
-        run_simulation(agents)
+        run_simulation(agents, num_rays)
 
         # Identifier le meilleur agent de cette génération
         current_best_agent = find_best_agent(agents)
