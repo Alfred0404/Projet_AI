@@ -84,16 +84,24 @@ def create_new_generation_with_best(best_agent, agents, num_agents, mutation_rat
 
     return new_agents
 
+def get_3first_cars(cars, list_podium):
+    for car in cars:
+        for l in list_podium:
+            if car.score > l.score:
+                list_podium.remove(l)
+                list_podium.append(car)
+                break
+    return list_podium
+
 def run_simulation(agents):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     game_map = pygame.image.load("./assets/map/map.png")
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
-
-    cars = [Car() for _ in agents]
+    cars = [Car(i for i in range(len(agents))) for _ in agents]
     start_time = pygame.time.get_ticks()  # Temps de début en millisecondes
-
+    list_podium = [cars[0],cars[1],cars[2]]
     car_metrics = {
             i: {
                 "last_positions": [],
@@ -105,11 +113,13 @@ def run_simulation(agents):
             for i in range(len(cars))
         }
 
+    font = pygame.font.SysFont("Arial", 20)
+
     run = True
     while run:
         current_time = pygame.time.get_ticks()
         elapsed_time = (current_time - start_time) / 1000  # Temps écoulé en secondes
-
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 sys.exit(0)
@@ -160,21 +170,26 @@ def run_simulation(agents):
         if still_alive == 0 or elapsed_time >= 20:  # 20 secondes ou tous morts
             print(f"Fin de la simulation : {still_alive} voitures en vie, Temps écoulé : {elapsed_time:.2f} sec")
             break
-
         # Affichage
         screen.fill(background)
         screen.blit(game_map, (10, 10))
+        list_podium = get_3first_cars(cars, list_podium)
+        print(list_podium[0].ids)
         for car in cars:
             if car.alive:
-                car.display(screen, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT))
+                car.display(screen, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT), list_podium)
+                pass
+        fps = clock.get_fps()
+        fps_text = font.render(f"FPS: {fps:.1f}", True, (255, 255, 255))
+        screen.blit(fps_text, (10, 10))
         pygame.display.flip()
         clock.tick(240)
 
 def main():
-    num_agents = 50
+    num_agents = 30
     max_generations = 200
     mutation_rate = 0.1
-    agents = [Agent(input_size=5, hidden_size=16, output_size=4) for _ in range(num_agents)]
+    agents = [Agent(input_size=5, hidden_size=16, output_size=3) for _ in range(num_agents)]
 
     best_agent = None
 
