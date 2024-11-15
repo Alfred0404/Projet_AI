@@ -9,7 +9,7 @@ from config_game import *
 
 
 class Car:
-    def __init__(self, num_rays=13):
+    def __init__(self):
         self.x = initial_x
         self.y = initial_y
         self.height = 50
@@ -127,7 +127,8 @@ class Car:
             except IndexError:
                 pass
 
-    def display(self, screen, ratio):
+    def display(self, screen, ratio, list_podium):
+
         # D'abord, redimensionner l'image originale avec le zoom
         scaled_original = pygame.transform.scale(
             self.original_image,
@@ -142,10 +143,11 @@ class Car:
             center=(self.x, self.y)
         )
 
-        self.detect_collision(screen)
-
-        screen.blit(rotated_image, self.image_rect.topleft)
+        for i in range(len(list_podium)):
+            if self.ids == list_podium[i].ids:
+                screen.blit(rotated_image, self.image_rect.topleft)
         # Afficher les rayons de vue
+        self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
         #self.display_time(screen)
         #self.display_laps(screen)
@@ -306,6 +308,7 @@ class Car:
         ):
             if self.cross_finish == False:
                 self.laps += 1
+                self.score += 100000 / self.time_alive
                 self.score *= 2
                 self.cross_finish = True
             else:
