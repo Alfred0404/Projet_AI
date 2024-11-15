@@ -10,7 +10,7 @@ zoom_step = 0.1
 background = (50, 150, 50)
 
 # car variables
-initial_x = 190
+initial_x = 200
 initial_y = 200
 
 finish_line = ((150, initial_y), (250, initial_y))

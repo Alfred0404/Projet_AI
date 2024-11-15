@@ -1,0 +1,171 @@
+import numpy as np
+import pygame
+import sys
+import math
+from Car import Car  # Classe gérant les voitures
+from config_game import *  # Configuration spécifique du jeu
+
+# Définition du réseau de neurones simple
+class SimpleNeuralNetwork:
+    def __init__(self, input_size, hidden_size, output_size):
+        self.weights_input_hidden = np.random.randn(input_size, hidden_size)
+        self.bias_hidden = np.random.randn(hidden_size)
+        self.weights_hidden_output = np.random.randn(hidden_size, output_size)
+        self.bias_output = np.random.randn(output_size)
+
+    def forward(self, inputs):
+        hidden = np.dot(inputs, self.weights_input_hidden) + self.bias_hidden
+        hidden = self._activation(hidden)
+        output = np.dot(hidden, self.weights_hidden_output) + self.bias_output
+        output = self._activation(output)
+        return output
+
+    def _activation(self, x):
+        return np.maximum(0, x)  # ReLU
+
+class Agent:
+    def __init__(self, input_size, hidden_size, output_size):
+        self.network = SimpleNeuralNetwork(input_size, hidden_size, output_size)
+        self.fitness = 0  # Performance de l'agent
+
+    def mutate(self, mutation_rate=0.1):
+        self.network.weights_input_hidden += mutation_rate * np.random.randn(*self.network.weights_input_hidden.shape)
+        self.network.bias_hidden += mutation_rate * np.random.randn(*self.network.bias_hidden.shape)
+        self.network.weights_hidden_output += mutation_rate * np.random.randn(*self.network.weights_hidden_output.shape)
+        self.network.bias_output += mutation_rate * np.random.randn(*self.network.bias_output.shape)
+
+    def crossover(self, other_agent):
+        child = Agent(
+            input_size=self.network.weights_input_hidden.shape[0],
+            hidden_size=self.network.weights_input_hidden.shape[1],
+            output_size=self.network.weights_hidden_output.shape[1]
+        )
+        child.network.weights_input_hidden = (self.network.weights_input_hidden + other_agent.network.weights_input_hidden) / 2
+        child.network.bias_hidden = (self.network.bias_hidden + other_agent.network.bias_hidden) / 2
+        child.network.weights_hidden_output = (self.network.weights_hidden_output + other_agent.network.weights_hidden_output) / 2
+        child.network.bias_output = (self.network.bias_output + other_agent.network.bias_output) / 2
+        return child
+
+def select_parents(agents):
+    total_fitness = sum(agent.fitness for agent in agents)
+    probabilities = [abs(agent.fitness / total_fitness) for agent in agents]
+    parent1 = np.random.choice(agents, p=probabilities)
+    parent2 = np.random.choice(agents, p=probabilities)
+    return parent1, parent2
+
+def create_new_generation(agents, num_agents, mutation_rate):
+    new_agents = []
+    elite_count = int(0.1 * num_agents)
+    elite = sorted(agents, key=lambda a: a.fitness, reverse=True)[:elite_count]
+    new_agents.extend(elite)
+
+    while len(new_agents) < num_agents:
+        parent1, parent2 = select_parents(agents)
+        child = parent1.crossover(parent2)
+        child.mutate(mutation_rate)
+        new_agents.append(child)
+
+    return new_agents
+
+def run_simulation(agents):
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    game_map = pygame.image.load("./assets/map/map.png")
+    game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
+    clock = pygame.time.Clock()
+
+    cars = [Car() for _ in agents]
+    start_time = pygame.time.get_ticks()  # Temps de début en millisecondes
+
+    car_metrics = {
+            i: {
+                "last_positions": [],
+                "time_without_progress": 0,
+                "last_score": 0,
+                "collision_count": 0,
+                "time_alive": 0,
+            }
+            for i in range(len(cars))
+        }
+
+    run = True
+    while run:
+        current_time = pygame.time.get_ticks()
+        elapsed_time = (current_time - start_time) / 1000  # Temps écoulé en secondes
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                sys.exit(0)
+
+        for i, car in enumerate(cars):
+            if car.alive:
+                
+                # Mise à jour des métriques
+                metrics = car_metrics[i]
+                metrics["time_alive"] += 1
+
+                # Vérification de la progression
+                current_score = car.score
+                if current_score > metrics["last_score"]:
+                    metrics["time_without_progress"] = 0
+                    metrics["last_score"] = current_score
+                else:
+                    metrics["time_without_progress"] += 1
+
+                # Vérification si la voiture tourne en rond
+                current_pos = (int(car.x), int(car.y))
+                metrics["last_positions"].append(current_pos)
+                if len(metrics["last_positions"]) > 60:  # 1 seconde d'historique
+                    metrics["last_positions"].pop(0)
+                    unique_positions = len(set(metrics["last_positions"]))
+                    if unique_positions < 10:  # Trop peu de positions uniques
+                        car.alive = False
+                        continue
+                
+                inputs = car.distance_rays
+                outputs = agents[i].network.forward(inputs)
+                action = np.argmax(outputs)
+
+                if action == 0:
+                    car.turn_left()
+                elif action == 1:
+                    car.turn_right()
+                elif action == 2:
+                    car.accelerate()
+                elif action == 3:
+                    car.brake()
+
+                car.update(game_map, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT))
+                
+                agents[i].fitness = car.score if car.score > 0 else 0
+
+        still_alive = sum(car.alive for car in cars)
+
+        # Vérification des conditions pour passer à la génération suivante
+        if still_alive == 0 or elapsed_time >= 20:  # 20 secondes ou tous morts
+            print(f"Fin de la simulation : {still_alive} voitures en vie, Temps écoulé : {elapsed_time:.2f} sec")
+            break
+
+        # Affichage
+        screen.fill(background)
+        screen.blit(game_map, (10, 10))
+        for car in cars:
+            if car.alive:
+                car.display(screen, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT))
+        pygame.display.flip()
+        clock.tick(240)
+
+def main():
+    num_agents = 30
+    max_generations = 100
+    agents = [Agent(input_size=5, hidden_size=32, output_size=4) for _ in range(num_agents)]
+
+    for generation in range(max_generations):
+        print(f"Génération {generation}")
+        run_simulation(agents)
+
+        agents = create_new_generation(agents, num_agents, mutation_rate=0.3)
+        print(f"Meilleure fitness de la génération {generation} : {max(agent.fitness for agent in agents)}")
+
+if __name__ == "__main__":
+    main()
