@@ -9,7 +9,7 @@ from config_game import *
 
 
 class Car:
-    def __init__(self):
+    def __init__(self, num_rays=13):
         self.x = initial_x
         self.y = initial_y
         self.height = 50
@@ -26,15 +26,9 @@ class Car:
         self.image = self.original_image
         self.image_rect = None
         self.cross_finish = False
-        self.distance_rays = [0, 0, 0, 0, 0]
         self.alive = True
-        self.rays_angle_const = [
-            math.radians(90),
-            math.radians(45),
-            math.radians(135),
-            math.radians(0),
-            math.radians(180),
-        ]
+        self.distance_rays = [0 for _ in range(num_rays)]
+        self.rays_angle_const = [math.radians(angle) for angle in range(0, 181, 15)]
         self.score = 0
         self.start_time = time.time()
         self.time_alive = 0
@@ -230,18 +224,7 @@ class Car:
             self.wheel_angle += self.angle_speed
 
     def reset(self):
-        #self.x = initial_x
-        #self.y = initial_y
-        #self.angle = 0
-        #self.wheel_angle = 0
-        #self.speed = 0
-        #self.score = 0
-        #self.laps = 0
         self.alive = False
-        #end_time = time.time()
-        #self.time_alive = end_time - self.start_time
-        #self.time_alive = 0
-        #self.start_time = time.time()
 
     def update_score(self):
         self.score += self.speed
@@ -293,7 +276,7 @@ class Car:
             ray_angle = math.radians(self.angle) + angle_offset
             end_x, end_y = cast_ray(center, ray_angle)
             self.distance_rays[i] = (((end_x - center[0]) ** 2 + (end_y - center[1]) ** 2) ** 0.5)
-            #pygame.draw.line(screen, (255, 0, 255), center, (end_x, end_y), 2)
+            # pygame.draw.line(screen, (255, 0, 255), center, (end_x - 1, end_y - 1), 1)
             #pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
 
 
@@ -323,6 +306,7 @@ class Car:
         ):
             if self.cross_finish == False:
                 self.laps += 1
+                self.score *= 2
                 self.cross_finish = True
             else:
                 self.cross_finish = False
