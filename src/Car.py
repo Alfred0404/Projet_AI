@@ -18,7 +18,7 @@ class Car:
         self.speed = 0
         self.acceleration = 0.1
         self.max_speed = 5
-        self.turning_radius = 10
+        self.turning_radius = 15
         self.max_wheel_angle = 20
         self.original_image = pygame.image.load("./assets/car.png")
         self.image = self.original_image
@@ -160,7 +160,7 @@ class Car:
         self.x -= math.sin(math.radians(self.angle)) * self.speed
         self.y -= math.cos(math.radians(self.angle)) * self.speed
 
-        self.max_wheel_angle = 40 / 2 * (2 - self.speed / self.max_speed)
+        self.max_wheel_angle = 50 / 2 * (2 - self.speed / self.max_speed)
         self.angle_speed =10 / 2 * (2 - self.speed / self.max_speed)
 
         # Gestion des touches pour accélérer, freiner et tourner
@@ -200,7 +200,7 @@ class Car:
             self.speed = self.max_speed
 
     def brake(self):
-        self.speed -= self.acceleration
+        self.speed -= self.acceleration *1.5
         if self.speed < -self.max_speed:
             self.speed = -self.max_speed
 
@@ -274,7 +274,7 @@ class Car:
             )  # Si aucun changement n'est détecté, retourner None
 
         def cast_ray(center_position, ray_angle):
-            ray_max_length = 100
+            ray_max_length = 500
             end_x = (
                 center_position[0] + ray_max_length * math.cos(-ray_angle)
             )
@@ -288,7 +288,7 @@ class Car:
             self.distance_rays[i] = (((end_x - center[0]) ** 2 + (end_y - center[1]) ** 2) ** 0.5)
             #pygame.draw.line(screen, (255, 0, 255), center, (end_x, end_y), 2)
             #pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
-        
+
 
     def display_time(self, screen):
         font = pygame.font.Font(None, 36)
@@ -319,4 +319,3 @@ class Car:
                 self.cross_finish = True
             else:
                 self.cross_finish = False
-        

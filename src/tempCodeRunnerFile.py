@@ -1,1 +1,0 @@
-int(map.get_height() * screen.get_height() / map.get_height() - 10)
