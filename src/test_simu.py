@@ -67,6 +67,23 @@ def create_new_generation(agents, num_agents, mutation_rate):
 
     return new_agents
 
+def find_best_agent(agents):
+    """Retourne l'agent avec la meilleure fitness."""
+    return max(agents, key=lambda agent: agent.fitness)
+
+def create_new_generation_with_best(best_agent, agents, num_agents, mutation_rate):
+    """
+    Crée une nouvelle génération en conservant le meilleur agent.
+    """
+    new_agents = [best_agent]  # Inclure directement le meilleur agent
+    while len(new_agents) < num_agents:
+        parent1, parent2 = select_parents(agents)
+        child = parent1.crossover(parent2)
+        child.mutate(mutation_rate)
+        new_agents.append(child)
+
+    return new_agents
+
 def run_simulation(agents):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -125,14 +142,12 @@ def run_simulation(agents):
                 inputs = car.distance_rays
                 outputs = agents[i].network.forward(inputs)
                 action = np.argmax(outputs)
-
+                car.accelerate()
                 if action == 0:
                     car.turn_left()
                 elif action == 1:
                     car.turn_right()
-                elif action == 2:
-                    car.accelerate()
-                elif action == 3:
+                else:
                     car.brake()
 
                 car.update(game_map, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT))
@@ -156,16 +171,33 @@ def run_simulation(agents):
         clock.tick(240)
 
 def main():
-    num_agents = 30
-    max_generations = 100
-    agents = [Agent(input_size=5, hidden_size=32, output_size=4) for _ in range(num_agents)]
+    num_agents = 50
+    max_generations = 200
+    mutation_rate = 0.1
+    agents = [Agent(input_size=5, hidden_size=16, output_size=4) for _ in range(num_agents)]
+
+    best_agent = None
 
     for generation in range(max_generations):
         print(f"Génération {generation}")
         run_simulation(agents)
 
-        agents = create_new_generation(agents, num_agents, mutation_rate=0.3)
-        print(f"Meilleure fitness de la génération {generation} : {max(agent.fitness for agent in agents)}")
+        # Identifier le meilleur agent de cette génération
+        current_best_agent = find_best_agent(agents)
+
+        if generation == 0 or current_best_agent.fitness > (best_agent.fitness if best_agent else 0):
+            best_agent = current_best_agent
+
+        if generation < 100:
+            # Générations 0 à 99 : Normal
+            agents = create_new_generation(agents, num_agents, mutation_rate)
+        else:
+            # Générations 100 à 199 : Réutiliser le meilleur
+            agents = create_new_generation_with_best(best_agent, agents, num_agents, mutation_rate)
+
+        print(f"Meilleure fitness de la génération {generation} : {current_best_agent.fitness}")
+
+    print(f"Agent le plus performant après {max_generations} générations : Fitness = {best_agent.fitness}")
 
 if __name__ == "__main__":
     main()
