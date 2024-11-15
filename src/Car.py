@@ -1,4 +1,6 @@
 import math
+import os
+import random
 
 import pygame
 import time
@@ -20,7 +22,7 @@ class Car:
         self.max_speed = 5
         self.turning_radius = 15
         self.max_wheel_angle = 20
-        self.original_image = pygame.image.load("./assets/car.png")
+        self.original_image = self.select_random_sprite()
         self.image = self.original_image
         self.image_rect = None
         self.cross_finish = False
@@ -38,6 +40,11 @@ class Car:
         self.time_alive = 0
         self.laps = 0
         self.list_pos_10 = []
+
+    def select_random_sprite(self):
+        files = [file for file in os.listdir("./assets/cars") if file.endswith(".png")]
+        random_number = random.randint(0, len(files) - 1)
+        return pygame.image.load(f"./assets/cars/{files[random_number]}")
 
     def update(self, screen, ratio):
         self.move()
