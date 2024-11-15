@@ -84,14 +84,16 @@ def create_new_generation_with_best(best_agent, agents, num_agents, mutation_rat
 
     return new_agents
 
-def get_3first_cars(cars, list_podium):
-    for car in cars:
-        for l in list_podium:
-            if car.score > l.score:
-                list_podium.remove(l)
-                list_podium.append(car)
-                break
-    return list_podium
+def get_top_3_cars(cars):
+
+    # Filtrer les voitures vivantes
+    living_cars = [car for car in cars if car.alive]
+
+    # Trier les voitures vivantes par score (de la plus haute à la plus basse)
+    sorted_cars = sorted(living_cars, key=lambda car: car.score, reverse=True)
+
+    # Retourner les 3 premières voitures
+    return sorted_cars[:3]
 
 def run_simulation(agents):
     pygame.init()
@@ -173,8 +175,7 @@ def run_simulation(agents):
         # Affichage
         screen.fill(background)
         screen.blit(game_map, (10, 10))
-        list_podium = get_3first_cars(cars, list_podium)
-        print(list_podium[0].ids)
+        list_podium = get_top_3_cars(cars)
         for car in cars:
             if car.alive:
                 car.display(screen, (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT), list_podium)
@@ -188,7 +189,7 @@ def run_simulation(agents):
 def main():
     num_agents = 30
     max_generations = 200
-    mutation_rate = 0.1
+    mutation_rate = 0.3
     agents = [Agent(input_size=5, hidden_size=16, output_size=3) for _ in range(num_agents)]
 
     best_agent = None

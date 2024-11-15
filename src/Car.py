@@ -152,7 +152,10 @@ class Car:
 
         for i in range(len(list_podium)):
             if self.ids == list_podium[i].ids:
-                screen.blit(rotated_image, self.image_rect.topleft)
+                rotated_image.set_alpha(255)
+            else:
+                rotated_image.set_alpha(50)
+        screen.blit(rotated_image, self.image_rect)
         # Afficher les rayons de vue
         self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
