@@ -9,9 +9,10 @@ from config_game import *
 
 
 class Car:
-    def __init__(self):
+    def __init__(self, ids, num_rays=13):
         self.x = initial_x
         self.y = initial_y
+        self.ids = ids
         self.height = 50
         self.width = 28
         self.angle = 0
@@ -127,7 +128,7 @@ class Car:
             except IndexError:
                 pass
 
-    def display(self, screen, ratio, list_podium):
+    def display(self, screen, list_podium):
 
         # D'abord, redimensionner l'image originale avec le zoom
         scaled_original = pygame.transform.scale(
