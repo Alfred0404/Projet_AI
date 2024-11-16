@@ -5,6 +5,9 @@ import math
 from Car import Car  # Classe gérant les voitures
 from config_game import *  # Configuration spécifique du jeu
 
+global current_generation
+current_generation = 0
+
 # Définition du réseau de neurones simple
 class SimpleNeuralNetwork:
     def __init__(self, input_size, hidden_size, output_size):
@@ -99,6 +102,9 @@ def run_simulation(agents, num_rays):
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
 
+    global current_generation
+    current_generation += 1
+    
     cars = [Car((i for i in range(len(agents))), num_rays) for _ in agents]
     start_time = pygame.time.get_ticks()  # Temps de début en millisecondes
     list_podium = [cars[0],cars[1],cars[2]]
@@ -119,7 +125,7 @@ def run_simulation(agents, num_rays):
     while run:
         current_time = pygame.time.get_ticks()
         elapsed_time = (current_time - start_time) / 1000  # Temps écoulé en secondes
-
+    
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 sys.exit(0)
@@ -181,7 +187,9 @@ def run_simulation(agents, num_rays):
                 pass
         fps = clock.get_fps()
         fps_text = font.render(f"FPS: {fps:.1f}", True, (255, 255, 255))
+        gen_text = font.render(f"GEN: {current_generation}", True, (255, 255, 255))
         screen.blit(fps_text, (10, 10))
+        screen.blit(gen_text, (10, 30))
         pygame.display.flip()
         clock.tick(240)
 
