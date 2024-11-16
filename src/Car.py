@@ -35,8 +35,9 @@ class Car:
         self.score = 0
         self.start_time = time.time()
         self.time_alive = 0
-        self.laps = 0
+        self.arrived = False
         self.list_pos_10 = []
+        self.counter = 0
 
     def select_random_sprite(self):
         files = [file for file in os.listdir("./assets/cars") if file.endswith(".png")]
@@ -130,7 +131,7 @@ class Car:
             except IndexError:
                 pass
 
-    def display(self, screen, list_podium, alpha_value=255):
+    def display(self, screen, list_podium, alpha):
 
         # D'abord, redimensionner l'image originale avec le zoom
         scaled_original = pygame.transform.scale(
@@ -142,11 +143,18 @@ class Car:
         self.image_rect = rotated_image.get_rect(
             center=(self.x, self.y)
         )
-        rotated_image.set_alpha(alpha_value)
+
+        for i in range(len(list_podium)):
+            if self.ids == list_podium[i].ids:
+                rotated_image.set_alpha(alpha)
+            else:
+                rotated_image.set_alpha(alpha)
         screen.blit(rotated_image, self.image_rect)
         # Afficher les rayons de vue
         self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
+        #self.display_time(screen)
+        #self.display_laps(screen)
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -199,7 +207,7 @@ class Car:
             self.speed = self.max_speed
 
     def brake(self):
-        self.speed -= self.acceleration *1.5
+        self.speed -= self.acceleration * 1.5
         if self.speed < -self.max_speed:
             self.speed = -self.max_speed
 
@@ -226,6 +234,7 @@ class Car:
 
     def update_score(self):
         self.score += self.speed
+        # print(f"Agent score: {round(self.score, 2)}")
 
     def display_rays(self, screen, center):
         # Afficher les rayons de vue
@@ -302,12 +311,11 @@ class Car:
             and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
         ):
             if self.cross_finish == False:
-                self.laps += 1
-                self.score += 100000 / self.time_alive
+                self.score += 1000000 / self.counter
                 self.score *= 2
                 self.cross_finish = True
                 self.alive = False
-                print(self.time_alive)
+                self.arrived = True
                 self.start_time = time.time()
 
             else:
