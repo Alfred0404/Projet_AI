@@ -130,7 +130,7 @@ class Car:
             except IndexError:
                 pass
 
-    def display(self, screen, list_podium):
+    def display(self, screen, list_podium, alpha_value=255):
 
         # D'abord, redimensionner l'image originale avec le zoom
         scaled_original = pygame.transform.scale(
@@ -142,18 +142,11 @@ class Car:
         self.image_rect = rotated_image.get_rect(
             center=(self.x, self.y)
         )
-
-        for i in range(len(list_podium)):
-            if self.ids == list_podium[i].ids:
-                rotated_image.set_alpha(255)
-            else:
-                rotated_image.set_alpha(50)
+        rotated_image.set_alpha(alpha_value)
         screen.blit(rotated_image, self.image_rect)
         # Afficher les rayons de vue
         self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
-        #self.display_time(screen)
-        #self.display_laps(screen)
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -233,7 +226,6 @@ class Car:
 
     def update_score(self):
         self.score += self.speed
-        # print(f"Agent score: {round(self.score, 2)}")
 
     def display_rays(self, screen, center):
         # Afficher les rayons de vue
