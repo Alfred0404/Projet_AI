@@ -1,76 +1,18 @@
+import sys
+
 import numpy as np
 import pygame
-import sys
-import math
-from Car import Car  # Classe gérant les voitures
+
+from classes.Agent import Agent
+from classes.Car import Car  # Classe gérant les voitures
 from config_game import *  # Configuration spécifique du jeu
+from classes.NeuralNetwork import SimpleNeuralNetwork
 
 global current_generation
 current_generation = 0
 
 global best_lap_gen
 best_lap_gen = [0, float("inf")]
-
-
-# Définition du réseau de neurones simple
-class SimpleNeuralNetwork:
-    def __init__(self, input_size, hidden_size, output_size):
-        self.weights_input_hidden = np.random.randn(input_size, hidden_size)
-        self.bias_hidden = np.random.randn(hidden_size)
-        self.weights_hidden_output = np.random.randn(hidden_size, output_size)
-        self.bias_output = np.random.randn(output_size)
-
-    def forward(self, inputs):
-        hidden = np.dot(inputs, self.weights_input_hidden) + self.bias_hidden
-        hidden = self._activation(hidden)
-        output = np.dot(hidden, self.weights_hidden_output) + self.bias_output
-        output = self._activation(output)
-        return output
-
-    def _activation(self, x):
-        return np.maximum(0, x)  # ReLU
-
-
-class Agent:
-    def __init__(self, input_size, hidden_size, output_size):
-        self.network = SimpleNeuralNetwork(input_size, hidden_size, output_size)
-        self.fitness = 0  # Performance de l'agent
-        self.best_lap = 0
-
-    def mutate(self, mutation_rate=0.1):
-        self.network.weights_input_hidden += mutation_rate * np.random.randn(
-            *self.network.weights_input_hidden.shape
-        )
-        self.network.bias_hidden += mutation_rate * np.random.randn(
-            *self.network.bias_hidden.shape
-        )
-        self.network.weights_hidden_output += mutation_rate * np.random.randn(
-            *self.network.weights_hidden_output.shape
-        )
-        self.network.bias_output += mutation_rate * np.random.randn(
-            *self.network.bias_output.shape
-        )
-
-    def crossover(self, other_agent):
-        child = Agent(
-            input_size=self.network.weights_input_hidden.shape[0],
-            hidden_size=self.network.weights_input_hidden.shape[1],
-            output_size=self.network.weights_hidden_output.shape[1],
-        )
-        child.network.weights_input_hidden = (
-            self.network.weights_input_hidden + other_agent.network.weights_input_hidden
-        ) / 2
-        child.network.bias_hidden = (
-            self.network.bias_hidden + other_agent.network.bias_hidden
-        ) / 2
-        child.network.weights_hidden_output = (
-            self.network.weights_hidden_output
-            + other_agent.network.weights_hidden_output
-        ) / 2
-        child.network.bias_output = (
-            self.network.bias_output + other_agent.network.bias_output
-        ) / 2
-        return child
 
 
 def select_parents(agents):
@@ -101,6 +43,60 @@ def find_best_agent(agents):
     return max(agents, key=lambda agent: agent.fitness)
 
 
+import json
+
+
+def save_best_agent(best_agent, filename="src/best_agent.json", current_generation=0):
+    """
+    Sauvegarde le meilleur agent avec toutes ses données pertinentes.
+    """
+    data = {
+        "weights_input_hidden": best_agent.network.weights_input_hidden.tolist(),
+        "weights_hidden_output": best_agent.network.weights_hidden_output.tolist(),
+        "bias_hidden": best_agent.network.bias_hidden.tolist(),
+        "bias_output": best_agent.network.bias_output.tolist(),
+        "generation": current_generation,
+        "best_lap": best_agent.best_lap,
+        "fitness": best_agent.fitness,
+    }
+    with open(filename, "w") as f:
+        json.dump(data, f)
+
+
+def get_best_agent(ray_nums=7):
+    """
+    Charge le meilleur agent à partir du fichier de sauvegarde.
+    """
+    try:
+        with open("src/best_agent.json", "r") as f:
+            data = json.load(f)
+
+            # Créer un nouvel agent
+            agent = Agent(input_size=ray_nums, hidden_size=16, output_size=3)
+
+            # Convertir les listes en arrays numpy
+            weights_input_hidden = np.array(data["weights_input_hidden"])
+            bias_hidden = np.array(data["bias_hidden"])
+            weights_hidden_output = np.array(data["weights_hidden_output"])
+            bias_output = np.array(data["bias_output"])
+            best_lap = data.get("best_lap", 0)  # Utiliser get() avec valeur par défaut
+            fitness = data.get("fitness", 0)
+
+            # Charger les paramètres dans l'agent
+            agent.network.weights_input_hidden = weights_input_hidden
+            agent.network.bias_hidden = bias_hidden
+            agent.network.weights_hidden_output = weights_hidden_output
+            agent.network.bias_output = bias_output
+            agent.best_lap = best_lap
+            agent.fitness = fitness
+
+            return agent
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        print(f"Erreur lors du chargement de l'agent: {e}")
+        # Retourner un nouvel agent avec des paramètres par défaut
+        return Agent(input_size=ray_nums, hidden_size=16, output_size=3)
+
+
 def create_new_generation_with_best(best_agent, agents, num_agents, mutation_rate):
     """
     Crée une nouvelle génération en conservant le meilleur agent.
@@ -123,15 +119,13 @@ def get_top_3_cars(cars):
     return sorted_cars[:3]
 
 
-def display_chrono(screen, bestlap, chrono):
+def display_chrono(screen, font, bestlap, chrono):
     # Afficher le chrono
-    texte = pygame.font.Font(None, 20).render(
-        f"GEN : {bestlap[0]} Chrono: {bestlap[1]} s", True, (255, 255, 255)
+    texte = font.render(
+        f"GEN : {bestlap[0]} Chrono: {bestlap[1]}", True, (255, 255, 255)
     )
     screen.blit(texte, (700, 500))
-    texte = pygame.font.Font(None, 20).render(
-        f"Chrono: {chrono} s", True, (255, 255, 255)
-    )
+    texte = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
     screen.blit(texte, (10, 70))
 
 
@@ -146,7 +140,7 @@ def run_simulation(agents, num_rays):
     game_map = pygame.image.load("./assets/map/map.png")
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
-
+    font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 20)
     global current_generation
     current_generation += 1
 
@@ -154,7 +148,6 @@ def run_simulation(agents, num_rays):
     counter = 0
 
     cars = [Car((i for i in range(len(agents))), num_rays, agent) for agent in agents]
-    start_time = pygame.time.get_ticks()
     list_podium = [cars[0], cars[1], cars[2]]
     car_metrics = {
         i: {
@@ -166,8 +159,6 @@ def run_simulation(agents, num_rays):
         }
         for i in range(len(cars))
     }
-
-    font = pygame.font.SysFont("Arial", 20)
 
     run = True
     while run:
@@ -216,7 +207,6 @@ def run_simulation(agents, num_rays):
                 else:
                     car.brake()
 
-
                 car.update(best_lap_gen[1])
                 car.counter = counter
                 agents[i].fitness = max(0, car.score)
@@ -260,54 +250,111 @@ def run_simulation(agents, num_rays):
 
         counter += 1
 
-        display_chrono(screen, best_lap_gen, counter)
+        display_chrono(screen, font, best_lap_gen, counter)
         pygame.display.flip()
         clock.tick(60)
-def get_best_laps(agents):
-    pass
 
 
 def main():
-    global best_lap_gen
+    global best_lap_gen, current_generation
     num_agents = 50
     max_generations = 1000
     mutation_rate = 0.5
     num_rays = 7
-    agents = [
-        Agent(input_size=num_rays, hidden_size=16, output_size=3)
-        for _ in range(num_agents)
-    ]
 
-    best_agent = None
+    # Tentative de chargement du meilleur agent
+    try:
+        with open("src/best_agent.json", "r") as f:
+            data = json.load(f)
+            if data:  # si le fichier n'est pas vide
+                best_agent = get_best_agent(num_rays)
+                # Créer une population initiale basée sur le meilleur agent
+                agents = [best_agent]  # Ajouter le meilleur agent directement
+                # Créer des variations du meilleur agent
+                for _ in range(num_agents - 1):
+                    new_agent = Agent(
+                        input_size=num_rays, hidden_size=16, output_size=3
+                    )
+                    new_agent.network.weights_input_hidden = (
+                        best_agent.network.weights_input_hidden.copy()
+                    )
+                    new_agent.network.bias_hidden = (
+                        best_agent.network.bias_hidden.copy()
+                    )
+                    new_agent.network.weights_hidden_output = (
+                        best_agent.network.weights_hidden_output.copy()
+                    )
+                    new_agent.network.bias_output = (
+                        best_agent.network.bias_output.copy()
+                    )
+                    new_agent.mutate(
+                        mutation_rate
+                    )  # Appliquer une mutation pour la variété
+                    agents.append(new_agent)
+                # Mettre à jour la génération actuelle
+                current_generation = data.get("generation", 0)
+                best_lap_gen = (
+                    [current_generation, best_agent.best_lap]
+                    if best_agent.best_lap < float("inf")
+                    else best_lap_gen
+                )
+            else:
+                agents = [
+                    Agent(input_size=num_rays, hidden_size=16, output_size=3)
+                    for _ in range(num_agents)
+                ]
+                best_agent = None
+    except (FileNotFoundError, json.JSONDecodeError):
+        agents = [
+            Agent(input_size=num_rays, hidden_size=16, output_size=3)
+            for _ in range(num_agents)
+        ]
+        best_agent = None
 
     for generation in range(max_generations):
-        print(f"Génération {generation}")
         run_simulation(agents, num_rays)
 
         # Identifier le meilleur agent de cette génération
         current_best_agent = find_best_agent(agents)
 
-        if generation == 0 or current_best_agent.fitness > (
-            best_agent.fitness if best_agent else 0
-        ):
-            best_agent = current_best_agent
+        # Mettre à jour le meilleur agent si nécessaire
+        if best_agent is None or current_best_agent.fitness > best_agent.fitness:
+            best_agent = Agent(input_size=num_rays, hidden_size=16, output_size=3)
+            # Copie profonde des paramètres
+            best_agent.network.weights_input_hidden = (
+                current_best_agent.network.weights_input_hidden.copy()
+            )
+            best_agent.network.bias_hidden = (
+                current_best_agent.network.bias_hidden.copy()
+            )
+            best_agent.network.weights_hidden_output = (
+                current_best_agent.network.weights_hidden_output.copy()
+            )
+            best_agent.network.bias_output = (
+                current_best_agent.network.bias_output.copy()
+            )
+            best_agent.fitness = current_best_agent.fitness
+            best_agent.best_lap = current_best_agent.best_lap
 
+            # Sauvegarder le meilleur agent
+            save_best_agent(
+                best_agent, current_generation=generation + current_generation
+            )
+
+        # Créer la nouvelle génération
         agents = create_new_generation_with_best(
             best_agent, agents, num_agents, mutation_rate
         )
 
-        get_best_laps(agents)
-        print(
-            f"Meilleure fitness de la génération {generation} : {current_best_agent.fitness}"
-        )
-        for agent in agents:
-            if agent.best_lap < best_lap_gen[1] and agent.best_lap != 0:
-                best_lap_gen = [generation, agent.best_lap]
-            print(f"Fitness de l'agent : {agent.fitness} {agent.best_lap}")
-
-    print(
-        f"Agent le plus performant après {max_generations} générations : Fitness = {best_agent.fitness}"
-    )
+        # Mise à jour des métriques
+        if (
+            current_best_agent.best_lap < best_lap_gen[1]
+            and current_best_agent.best_lap != 0
+        ):
+            best_lap_gen = [
+                generation + current_generation,
+                current_best_agent.best_lap,
+            ]
 
 
 if __name__ == "__main__":
