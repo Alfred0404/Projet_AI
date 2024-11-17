@@ -18,18 +18,18 @@ To get started with the AI Racing Car project, follow these steps:
 
 1. **Installation**: Ensure you have Python and Pygame installed on your system. You can install Pygame using the following command:
    ```
-   pip install pygame
+   pip install pygame numpy
    ```
 
 2. **Cloning the Repository**: Clone this repository to your local machine using:
    ```
-   git clone https://github.com/yourusername/ai-racing-car.git
+   git clone https://github.com/yourusername/Projet_AI.git
    ```
 
 3. **Running the Simulation**: Navigate to the project directory and run the main simulation script:
    ```
-   cd ai-racing-car
-   python src/main.py
+   cd Projet_AI
+   python src/test_simu.py
    ```
 
 4. **Observing the Training Process**: Watch as the AI trains over multiple generations, with each generation producing a more refined racing agent.

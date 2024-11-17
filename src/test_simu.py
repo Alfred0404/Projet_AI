@@ -136,8 +136,9 @@ def kill_all_cars(cars):
 
 def run_simulation(agents, num_rays):
     pygame.init()
+
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    game_map = pygame.image.load("./assets/map/map2.png")
+    game_map = pygame.image.load(map_path)
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
     font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 20)
