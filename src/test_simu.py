@@ -9,7 +9,8 @@ global current_generation
 current_generation = 0
 
 global best_lap_gen
-best_lap_gen = [0,float('inf')]
+best_lap_gen = [0, float("inf")]
+
 
 # Définition du réseau de neurones simple
 class SimpleNeuralNetwork:
@@ -124,15 +125,20 @@ def get_top_3_cars(cars):
 
 def display_chrono(screen, bestlap, chrono):
     # Afficher le chrono
-    texte = pygame.font.Font(None, 20).render(f"GEN : {bestlap[0]} Chrono: {bestlap[1]} s", True, (255, 255, 255))
+    texte = pygame.font.Font(None, 20).render(
+        f"GEN : {bestlap[0]} Chrono: {bestlap[1]} s", True, (255, 255, 255)
+    )
     screen.blit(texte, (700, 500))
-    texte = pygame.font.Font(None, 20).render(f"Chrono: {chrono} s", True, (255, 255, 255))
+    texte = pygame.font.Font(None, 20).render(
+        f"Chrono: {chrono} s", True, (255, 255, 255)
+    )
     screen.blit(texte, (10, 70))
 
 
 def kill_all_cars(cars):
     for car in cars:
         car.alive = False
+
 
 def run_simulation(agents, num_rays):
     pygame.init()
@@ -214,7 +220,7 @@ def run_simulation(agents, num_rays):
 
                 car.update(
                     game_map,
-                    (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT)
+                    (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT),
                 )
                 car.counter = counter
                 agents[i].fitness = max(0, car.score)
@@ -240,7 +246,9 @@ def run_simulation(agents, num_rays):
 
         # Afficher d'abord les voitures hors podium avec transparence
         for car in other_cars:
-            car.display(screen, list_podium, 50)  # alpha_value = 50 pour les voitures non podium
+            car.display(
+                screen, list_podium, 50
+            )  # alpha_value = 50 pour les voitures non podium
 
         # Puis afficher les voitures du podium par-dessus
         for car in podium_cars:
@@ -250,15 +258,14 @@ def run_simulation(agents, num_rays):
         fps = clock.get_fps()
         fps_text = font.render(f"FPS: {fps:.1f}", True, (255, 255, 255))
         gen_text = font.render(f"GEN: {current_generation}", True, (255, 255, 255))
-        still_alive_text = font.render(f"Still alive: {still_alive}", True, (255, 255, 255))
-        best_lap_gen_text = font.render(f"Best lap: {best_lap_gen[1]:.2f} sec", True, (255, 255, 255))
+        still_alive_text = font.render(
+            f"Still alive: {still_alive}", True, (255, 255, 255)
+        )
         screen.blit(fps_text, (10, 10))
         screen.blit(gen_text, (10, 30))
         screen.blit(still_alive_text, (10, 50))
-        screen.blit(best_lap_gen_text, (10, 90))
 
         counter += 1
-
 
         display_chrono(screen, best_lap_gen, counter)
 
@@ -268,6 +275,7 @@ def run_simulation(agents, num_rays):
 
 def get_best_laps(agents):
     pass
+
 
 def main():
 
@@ -296,20 +304,13 @@ def main():
         ):
             best_agent = current_best_agent
 
-        if generation % 10 == 0:
-            agents = create_new_generation_with_best(
-                best_agent, agents, num_agents, mutation_rate
-            )
-            # Générations 0 à 99 : Normal
-        else:
-            # Générations 100 à 199 : Réutiliser le meilleur
-
-            agents = create_new_generation(agents, num_agents, mutation_rate)
+        agents = create_new_generation_with_best(
+            best_agent, agents, num_agents, mutation_rate
+        )
 
         get_best_laps(agents)
         print(
             f"Meilleure fitness de la génération {generation} : {current_best_agent.fitness}"
-
         )
         for agent in agents:
             if agent.best_lap < best_lap_gen[1] and agent.best_lap != 0:
