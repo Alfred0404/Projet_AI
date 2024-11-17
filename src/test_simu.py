@@ -130,6 +130,10 @@ def display_chrono(screen, bestlap, chrono):
     screen.blit(texte, (10, 70))
 
 
+def kill_all_cars(cars):
+    for car in cars:
+        car.alive = False
+
 def run_simulation(agents, num_rays):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -139,7 +143,7 @@ def run_simulation(agents, num_rays):
 
     global current_generation
     current_generation += 1
-    
+
     global best_lap_gen
     counter = 0
 
@@ -165,7 +169,7 @@ def run_simulation(agents, num_rays):
 
         current_time = pygame.time.get_ticks()
         elapsed_time = (current_time - start_time) / 1000
-        
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
@@ -207,13 +211,16 @@ def run_simulation(agents, num_rays):
                     car.turn_right()
                 else:
                     car.brake()
-          
+
                 car.update(
                     game_map,
                     (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT)
                 )
                 car.counter = counter
-                agents[i].fitness = car.score if car.score > 0 else 0
+                agents[i].fitness = max(0, car.score)
+
+                if car.arrived:
+                    kill_all_cars(cars)
 
         still_alive = sum(car.alive for car in cars)
 
@@ -221,9 +228,6 @@ def run_simulation(agents, num_rays):
             print(
                 f"Fin de la simulation : {still_alive} voitures en vie, Temps écoulé : {elapsed_time:.2f} sec"
             )
-            #for agent in agents:
-            #    if agent.best_lap < best_lap_gen[1]:
-            #        best_lap_gen = [current_generation, counter] if any(car.arrived for car in cars) else best_lap_gen
             break
 
         # Affichage
@@ -252,27 +256,26 @@ def run_simulation(agents, num_rays):
         screen.blit(gen_text, (10, 30))
         screen.blit(still_alive_text, (10, 50))
         screen.blit(best_lap_gen_text, (10, 90))
-        
+
         counter += 1
 
 
         display_chrono(screen, best_lap_gen, counter)
-        
+
         pygame.display.flip()
         clock.tick(60)
 
 
-    
 def get_best_laps(agents):
     pass
 
 def main():
-    
+
     global best_lap_gen
-    
+
     num_agents = 50
     max_generations = 1000
-    mutation_rate = 1
+    mutation_rate = 0.5
     num_rays = 7
     agents = [
         Agent(input_size=num_rays, hidden_size=16, output_size=3)
@@ -300,13 +303,13 @@ def main():
             # Générations 0 à 99 : Normal
         else:
             # Générations 100 à 199 : Réutiliser le meilleur
-            
+
             agents = create_new_generation(agents, num_agents, mutation_rate)
-            
+
         get_best_laps(agents)
         print(
             f"Meilleure fitness de la génération {generation} : {current_best_agent.fitness}"
-            
+
         )
         for agent in agents:
             if agent.best_lap < best_lap_gen[1] and agent.best_lap != 0:
