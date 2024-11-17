@@ -45,14 +45,14 @@ class Car:
         random_number = random.randint(0, len(files) - 1)
         return pygame.image.load(f"./assets/cars/{files[random_number]}")
 
-    def update(self, screen, ratio):
+    def update(self, best_lap):
         self.move()
         self.update_score()
         #self.display(screen, ratio)
         self.time_alive = time.time() - self.start_time
 
         self.get_pos()
-        self.cross_finish_line()
+        self.cross_finish_line(best_lap)
 
     def detect_collision(self, screen):
         front_right = (
@@ -304,7 +304,7 @@ class Car:
             self.list_pos_10.pop(0)
         self.list_pos_10.append((int(self.x), int(self.y)))
 
-    def cross_finish_line(self):
+    def cross_finish_line(self, best_lap):
         if (
             finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
             and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
@@ -312,13 +312,15 @@ class Car:
             and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
         ):
             if self.cross_finish == False:
-                self.score += 100000 / (self.counter)
+                self.score += 1000 / (self.counter)
                 self.score *= 2
                 self.cross_finish = True
                 self.alive = False
                 self.arrived = True
                 self.start_time = time.time()
                 self.agent.best_lap = self.counter
+                if self.counter < best_lap:
+                    self.score += 100
 
             else:
                 self.cross_finish = False

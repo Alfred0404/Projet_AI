@@ -173,9 +173,7 @@ def run_simulation(agents, num_rays):
     while run:
         list_podium = get_top_3_cars(cars)
 
-        current_time = pygame.time.get_ticks()
-        elapsed_time = (current_time - start_time) / 1000
-
+        # Gestion des evenements
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
@@ -218,10 +216,8 @@ def run_simulation(agents, num_rays):
                 else:
                     car.brake()
 
-                car.update(
-                    game_map,
-                    (game_map.get_width() / WIDTH, game_map.get_height() / HEIGHT),
-                )
+
+                car.update(best_lap_gen[1])
                 car.counter = counter
                 agents[i].fitness = max(0, car.score)
 
@@ -231,9 +227,6 @@ def run_simulation(agents, num_rays):
         still_alive = sum(car.alive for car in cars)
 
         if still_alive == 0:
-            print(
-                f"Fin de la simulation : {still_alive} voitures en vie, Temps écoulé : {elapsed_time:.2f} sec"
-            )
             break
 
         # Affichage
@@ -268,19 +261,14 @@ def run_simulation(agents, num_rays):
         counter += 1
 
         display_chrono(screen, best_lap_gen, counter)
-
         pygame.display.flip()
         clock.tick(60)
-
-
 def get_best_laps(agents):
     pass
 
 
 def main():
-
     global best_lap_gen
-
     num_agents = 50
     max_generations = 1000
     mutation_rate = 0.5
