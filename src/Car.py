@@ -9,7 +9,7 @@ from config_game import *
 
 
 class Car:
-    def __init__(self, ids, num_rays):
+    def __init__(self, ids, num_rays, agent):
         self.x = initial_x
         self.y = initial_y
         self.ids = ids
@@ -38,6 +38,7 @@ class Car:
         self.arrived = False
         self.list_pos_10 = []
         self.counter = 0
+        self.agent = agent
 
     def select_random_sprite(self):
         files = [file for file in os.listdir("./assets/cars") if file.endswith(".png")]
@@ -233,7 +234,7 @@ class Car:
         self.alive = False
 
     def update_score(self):
-        self.score += self.speed
+        self.score += self.speed / (self.counter + 1)
         # print(f"Agent score: {round(self.score, 2)}")
 
     def display_rays(self, screen, center):
@@ -311,12 +312,13 @@ class Car:
             and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
         ):
             if self.cross_finish == False:
-                self.score += 1000000 / self.counter
+                self.score += 100000 / (self.counter)
                 self.score *= 2
                 self.cross_finish = True
                 self.alive = False
                 self.arrived = True
                 self.start_time = time.time()
+                self.agent.best_lap = self.counter
 
             else:
                 self.cross_finish = False

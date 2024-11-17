@@ -143,7 +143,7 @@ def run_simulation(agents, num_rays):
     global best_lap_gen
     counter = 0
 
-    cars = [Car((i for i in range(len(agents))), num_rays) for _ in agents]
+    cars = [Car((i for i in range(len(agents))), num_rays, agent) for agent in agents]
     start_time = pygame.time.get_ticks()
     list_podium = [cars[0], cars[1], cars[2]]
     car_metrics = {
@@ -214,7 +214,6 @@ def run_simulation(agents, num_rays):
                 )
                 car.counter = counter
                 agents[i].fitness = car.score if car.score > 0 else 0
-                agents[i].fitness = counter
 
         still_alive = sum(car.alive for car in cars)
 
@@ -222,8 +221,9 @@ def run_simulation(agents, num_rays):
             print(
                 f"Fin de la simulation : {still_alive} voitures en vie, Temps écoulé : {elapsed_time:.2f} sec"
             )
-            if counter < best_lap_gen[1]:
-                best_lap_gen = [current_generation, counter] if any(car.arrived for car in cars) else best_lap_gen
+            #for agent in agents:
+            #    if agent.best_lap < best_lap_gen[1]:
+            #        best_lap_gen = [current_generation, counter] if any(car.arrived for car in cars) else best_lap_gen
             break
 
         # Affichage
@@ -268,7 +268,7 @@ def get_best_laps(agents):
 
 def main():
     
-    
+    global best_lap_gen
     
     num_agents = 50
     max_generations = 1000
@@ -309,7 +309,9 @@ def main():
             
         )
         for agent in agents:
-            print(f"Fitness de l'agent : {agent.best_lap}")
+            if agent.best_lap < best_lap_gen[1] and agent.best_lap != 0:
+                best_lap_gen = [generation, agent.best_lap]
+            print(f"Fitness de l'agent : {agent.fitness} {agent.best_lap}")
 
     print(
         f"Agent le plus performant après {max_generations} générations : Fitness = {best_agent.fitness}"
