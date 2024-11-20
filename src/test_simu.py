@@ -46,7 +46,7 @@ def find_best_agent(agents):
 import json
 
 
-def save_best_agent(best_agent, filename="src/best_agent.json", current_generation=0):
+def save_best_agent(best_agent, filename=agent_path, current_generation=0):
     """
     Sauvegarde le meilleur agent avec toutes ses données pertinentes.
     """
@@ -68,7 +68,7 @@ def get_best_agent(ray_nums=7):
     Charge le meilleur agent à partir du fichier de sauvegarde.
     """
     try:
-        with open("src/best_agent.json", "r") as f:
+        with open(agent_path, "r") as f:
             data = json.load(f)
 
             # Créer un nouvel agent
@@ -132,12 +132,15 @@ def display_chrono(screen, font, bestlap, chrono):
 def kill_all_cars(cars):
     for car in cars:
         car.alive = False
+        
+def display_finish_line(map):
+    pygame.draw.line(map, (255, 0, 0),  finish_line[0], finish_line[1], 5)
 
 
 def run_simulation(agents, num_rays):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    game_map = pygame.image.load("./assets/map/map2.png")
+    game_map = pygame.image.load("./assets/map/map.png")
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
     font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 20)
@@ -249,7 +252,7 @@ def run_simulation(agents, num_rays):
         screen.blit(still_alive_text, (10, 50))
 
         counter += 1
-
+        display_finish_line(game_map)
         display_chrono(screen, font, best_lap_gen, counter)
         pygame.display.flip()
         clock.tick(60)
@@ -258,13 +261,13 @@ def run_simulation(agents, num_rays):
 def main():
     global best_lap_gen, current_generation
     num_agents = 50
-    max_generations = 1000
+    max_generations = 10000
     mutation_rate = 0.5
     num_rays = 7
 
     # Tentative de chargement du meilleur agent
     try:
-        with open("src/best_agent.json", "r") as f:
+        with open(agent_path, "r") as f:
             data = json.load(f)
             if data:  # si le fichier n'est pas vide
                 best_agent = get_best_agent(num_rays)

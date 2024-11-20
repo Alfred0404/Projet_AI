@@ -10,8 +10,11 @@ zoom_step = 0.1
 background = (50, 150, 50)
 
 # car variables
+# map 2 70 / 300
 initial_x = 70
 initial_y = 300
 
-finish_line = ((150, initial_y), (250, initial_y))
+finish_line = ((initial_x - 50, initial_y+50), (initial_x +50, initial_y+50))
 finish_line_color = (255, 0, 0)
+
+agent_path = "src/best_agent.json"

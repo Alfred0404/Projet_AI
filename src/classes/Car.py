@@ -22,7 +22,7 @@ class Car:
         self.acceleration = 0.1
         self.max_speed = 5
         self.turning_radius = 15
-        self.max_wheel_angle = 20
+        self.max_wheel_angle = 30
         self.original_image = self.select_random_sprite()
         self.image = self.original_image
         self.image_rect = None
@@ -53,6 +53,8 @@ class Car:
 
         self.get_pos()
         self.cross_finish_line(best_lap)
+        if self.score < 0:
+            self.alive = 0
 
     def detect_collision(self, screen):
         front_right = (
@@ -129,6 +131,8 @@ class Car:
                 if screen.get_at(corner) == background:
                     #print(self.score)
                     self.reset()
+                    if not self.alive:
+                        self.score -= 1
             except IndexError:
                 pass
 
@@ -208,7 +212,7 @@ class Car:
             self.speed = self.max_speed
 
     def brake(self):
-        self.speed -= self.acceleration * 1.5
+        self.speed -= self.acceleration * 2.75
         if self.speed < -self.max_speed:
             self.speed = -self.max_speed
 
@@ -232,6 +236,7 @@ class Car:
 
     def reset(self):
         self.alive = False
+ 
 
     def update_score(self):
         self.score += self.speed / (self.counter + 1)
@@ -312,12 +317,11 @@ class Car:
             and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
         ):
             if self.cross_finish == False:
-                self.score += 1000 / (self.counter)
-                self.score *= 2
+                self.score += 10000 / (self.counter)
+                #self.score *= 2
                 self.cross_finish = True
                 self.alive = False
                 self.arrived = True
-                self.start_time = time.time()
                 self.agent.best_lap = self.counter
                 if self.counter < best_lap:
                     self.score += 100
