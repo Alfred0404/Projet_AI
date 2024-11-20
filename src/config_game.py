@@ -22,8 +22,9 @@ def choose_map(map_id):
         initial_x = 70
         initial_y = 300
 
-        finish_line = ((initial_x - 50 , initial_y), (initial_x + 50, initial_y))
+        finish_line = ((initial_x - 50, initial_y), (initial_x + 50, initial_y))
 
     return map_path, initial_x, initial_y, finish_line
 
-map_path, initial_x, initial_y, finish_line = choose_map(2)
+
+map_path, initial_x, initial_y, finish_line = choose_map(1)
