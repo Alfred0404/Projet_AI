@@ -7,7 +7,6 @@ from classes.Agent import Agent
 from classes.Car import Car  # Classe gérant les voitures
 from config_game import *  # Configuration spécifique du jeu
 from classes.NeuralNetwork import SimpleNeuralNetwork
-
 global current_generation
 current_generation = 0
 
@@ -121,12 +120,14 @@ def get_top_3_cars(cars):
 
 def display_chrono(screen, font, bestlap, chrono):
     # Afficher le chrono
-    texte = font.render(
+    text = font.render(
         f"GEN : {bestlap[0]} Chrono: {bestlap[1]}", True, (255, 255, 255)
     )
-    screen.blit(texte, (700, 500))
-    texte = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
-    screen.blit(texte, (10, 70))
+    screen.blit(text, (700, 500))
+    max_fitness_text = font.render(f"Best fitness: {bestlap}", True, (255, 255, 255))
+    screen.blit(max_fitness_text, (700, 530))
+    text = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
+    screen.blit(text, (10, 70))
 
 
 def kill_all_cars(cars):
@@ -260,9 +261,9 @@ def run_simulation(agents, num_rays):
 
 def main():
     global best_lap_gen, current_generation
-    num_agents = 50
+    num_agents = 70
     max_generations = 10000
-    mutation_rate = 0.5
+    mutation_rate = 5
     num_rays = 7
 
     # Tentative de chargement du meilleur agent
@@ -297,7 +298,7 @@ def main():
                 # Mettre à jour la génération actuelle
                 current_generation = data.get("generation", 0)
                 best_lap_gen = (
-                    [current_generation, best_agent.best_lap]
+                    [current_generation, best_agent.best_lap, best_agent.fitness]
                     if best_agent.best_lap < float("inf")
                     else best_lap_gen
                 )
@@ -357,6 +358,7 @@ def main():
             best_lap_gen = [
                 generation + current_generation,
                 current_best_agent.best_lap,
+                current_best_agent.fitness,
             ]
 
 

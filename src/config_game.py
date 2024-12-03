@@ -26,7 +26,7 @@ def choose_map(map_id):
     return map_path, initial_x, initial_y, finish_line
 
 
-map_path, initial_x, initial_y, finish_line = choose_map(2)
+map_path, initial_x, initial_y, finish_line = choose_map(1)
 
 
 agent_path = "src/best_agent.json"

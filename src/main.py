@@ -18,7 +18,7 @@ def display_finish_line(screen):
     pygame.draw.line(screen, (255, 255, 0), finish_line[0], finish_line[1], 5)
 
 
-def update_screen(screen, map, cars):
+def update_screen(screen, map, car):
 
     # Redimensionnement de la carte pour le zoom
 
@@ -34,9 +34,9 @@ def update_screen(screen, map, cars):
     screen.blit(zoomed_map, (10, 10))
 
     # Mise à jour et affichage de la voiture avec zoom
-    for car in cars:
-        car_ratio = (map.get_width() / WIDTH, map.get_height() / HEIGHT)
-        car.update(screen, car_ratio)
+    
+    car_ratio = (map.get_width() / WIDTH, map.get_height() / HEIGHT)
+    car.display(screen, [car,car,car],255)
     # Rafraîchir l'écran
 
     pygame.display.flip()
@@ -50,17 +50,16 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
-    car = Car()
-    car2 = Car()
-    list_cars = [car, car2]
-    global map
+    car = Car(1,7,1)
+    global mapz
     map = pygame.image.load("./assets/map/map.png")
 
     while True:
         handle_events()
-        update_screen(screen, map, list_cars)
+        update_screen(screen, map, car)
+        car.move()
+        print(car.x, car.y)
         clock.tick(60)
-    print(data_recovery(car.score, car.time_alive))
 
 
 main()
