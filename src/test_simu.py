@@ -258,7 +258,7 @@ def run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line
         pygame.display.flip()
         clock.tick(60)
 
-def Simulation(map_path, initial_x, initial_y, finish_line, screen):
+def Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_path):
     global best_lap_gen, current_generation
     num_agents = 10
     max_generations = 10000
@@ -358,3 +358,4 @@ def Simulation(map_path, initial_x, initial_y, finish_line, screen):
                 generation + current_generation,
                 current_best_agent.best_lap,
             ]
+

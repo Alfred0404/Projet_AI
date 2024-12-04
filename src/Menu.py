@@ -13,14 +13,14 @@ def simulation_mode(map_choice, screen):
     print(f"Carte chargée : {map_path}, Départ : ({initial_x}, {initial_y})")
     print(f"Lancement de la simulation pour la carte {map_choice}")
 
-
     background_color = (10, 10, 50)
 
-    # Sous-menu pour l'agent
+    # Sous-menu pour choisir l'agent
     font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 74)
     agent_file = choose_agent_menu(screen, font, background_color)
-    if agent_file == "Return":
+    if agent_file == "Retour":
         return
+
 
     if agent_file is None:
         base_agent = Agent(input_size=7, hidden_size=16, output_size=3)
@@ -28,6 +28,7 @@ def simulation_mode(map_choice, screen):
     else:
         base_agent = load_agent(agent_file)
         print(f"Agent chargé depuis le fichier : {agent_file}")
+
 
     num_agents = 10
     agents = [base_agent]
@@ -40,7 +41,8 @@ def simulation_mode(map_choice, screen):
         new_agent.mutate(0.1)
         agents.append(new_agent)
 
-    Simulation(map_path, initial_x, initial_y, finish_line, screen)
+    Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_file)
+
 
 
 def choose_map_menu(screen, font, background_color):
