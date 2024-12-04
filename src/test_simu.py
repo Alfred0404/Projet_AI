@@ -7,7 +7,6 @@ from classes.Agent import Agent
 from classes.Car import Car  # Classe gérant les voitures
 from config_game import *  # Configuration spécifique du jeu
 from classes.NeuralNetwork import SimpleNeuralNetwork
-
 global current_generation
 current_generation = 0
 
@@ -46,7 +45,7 @@ def find_best_agent(agents):
 import json
 
 
-def save_best_agent(best_agent, filename="src/best_agent.json", current_generation=0):
+def save_best_agent(best_agent, filename=agent_path, current_generation=0):
     """
     Sauvegarde le meilleur agent avec toutes ses données pertinentes.
     """
@@ -68,7 +67,7 @@ def get_best_agent(ray_nums=7):
     Charge le meilleur agent à partir du fichier de sauvegarde.
     """
     try:
-        with open("src/best_agent.json", "r") as f:
+        with open(agent_path, "r") as f:
             data = json.load(f)
 
             # Créer un nouvel agent
@@ -119,19 +118,27 @@ def get_top_3_cars(cars):
     return sorted_cars[:3]
 
 
-def display_chrono(screen, font, bestlap, chrono):
+def display_chrono(screen, font, bestlap, chrono, results_pos):
     # Afficher le chrono
-    texte = font.render(
+    text = font.render(
         f"GEN : {bestlap[0]} Chrono: {bestlap[1]}", True, (255, 255, 255)
     )
-    screen.blit(texte, (700, 500))
-    texte = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
-    screen.blit(texte, (10, 70))
+    screen.blit(text, results_pos)
+    try:
+        max_fitness_text = font.render(f"Best fitness: {round(bestlap[2])}", True, (255, 255, 255))
+    except:
+        max_fitness_text = font.render(f"Best fitness: 0", True, (255, 255, 255))
+    screen.blit(max_fitness_text, (results_pos[0], results_pos[1] + 30))
+    text = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
+    screen.blit(text, (10, 70))
 
 
 def kill_all_cars(cars):
     for car in cars:
         car.alive = False
+
+def display_finish_line(map):
+    pygame.draw.line(map, (255, 0, 0),  finish_line[0], finish_line[1], 5)
 
 
 def run_simulation(agents, num_rays):
@@ -250,22 +257,22 @@ def run_simulation(agents, num_rays):
         screen.blit(still_alive_text, (10, 50))
 
         counter += 1
-
-        display_chrono(screen, font, best_lap_gen, counter)
+        display_finish_line(game_map)
+        display_chrono(screen, font, best_lap_gen, counter, results_pos)
         pygame.display.flip()
         clock.tick(60)
 
 
 def main():
     global best_lap_gen, current_generation
-    num_agents = 50
-    max_generations = 1000
+    num_agents = 70
+    max_generations = 10000
     mutation_rate = 0.5
     num_rays = 7
 
     # Tentative de chargement du meilleur agent
     try:
-        with open("src/best_agent.json", "r") as f:
+        with open(agent_path, "r") as f:
             data = json.load(f)
             if data:  # si le fichier n'est pas vide
                 best_agent = get_best_agent(num_rays)
@@ -295,7 +302,7 @@ def main():
                 # Mettre à jour la génération actuelle
                 current_generation = data.get("generation", 0)
                 best_lap_gen = (
-                    [current_generation, best_agent.best_lap]
+                    [current_generation, best_agent.best_lap, best_agent.fitness]
                     if best_agent.best_lap < float("inf")
                     else best_lap_gen
                 )
@@ -355,6 +362,7 @@ def main():
             best_lap_gen = [
                 generation + current_generation,
                 current_best_agent.best_lap,
+                current_best_agent.fitness,
             ]
 
 

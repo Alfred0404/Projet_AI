@@ -16,15 +16,20 @@ def choose_map(map_id):
         initial_x = 223
         initial_y = 200
 
+        results_pos = (700, 500)
+
         finish_line = ((150, initial_y), (250, initial_y))
     elif map_id == 2:
         map_path = "./assets/map/map2.png"
         initial_x = 70
-        initial_y = 300
+        initial_y = 260
 
-        finish_line = ((initial_x - 50, initial_y), (initial_x + 50, initial_y))
+        results_pos = (900, 500)
 
-    return map_path, initial_x, initial_y, finish_line
+        finish_line = ((initial_x - 50, initial_y), (initial_x + 30, initial_y))
+
+    return map_path, initial_x, initial_y, finish_line, results_pos
 
 
-map_path, initial_x, initial_y, finish_line = choose_map(1)
+map_path, initial_x, initial_y, finish_line, results_pos = choose_map(2)
+agent_path = "src/best_agent_map_2.json"
