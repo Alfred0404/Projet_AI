@@ -7,7 +7,7 @@ zoom_factor = 0.8
 zoom_step = 0.1
 
 # colors
-background = (50, 150, 50)
+background = (10, 10, 50)
 
 def choose_map(map_id):
     if map_id == 1:

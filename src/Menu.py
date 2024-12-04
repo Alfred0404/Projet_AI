@@ -2,11 +2,10 @@ import pygame
 import sys
 from test_simu import *
 from config_game import choose_map
+from Solo import course
 
-def single_mode(map_choice):
-    map_path, initial_x, initial_y, finish_line = choose_map(map_choice)
-    print(f"Mode solo sélectionné avec la carte {map_choice} !")
-    print(f"Carte chargée : {map_path}, Départ : ({initial_x}, {initial_y})")
+def single_mode():
+    course()
 
 def simulation_mode(map_choice, screen):
     map_path, initial_x, initial_y, finish_line = choose_map(map_choice)
@@ -15,81 +14,64 @@ def simulation_mode(map_choice, screen):
     print(f"Lancement de la simulation pour la carte {map_choice}")
 
 
-    background_color = (50, 150, 50)
+    background_color = (10, 10, 50)
 
-    # Sous-menu pour choisir l'agent
+    # Sous-menu pour l'agent
     font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 74)
-    agent_file = choose_agent_menu(screen, font, background_color)  # Passe la couleur de fond
-    if agent_file == "Retour":
+    agent_file = choose_agent_menu(screen, font, background_color)
+    if agent_file == "Return":
         return
 
-    # Chargement de l'agent choisi
-    if agent_file is None:  # Agent non entraîné
+    if agent_file is None:
         base_agent = Agent(input_size=7, hidden_size=16, output_size=3)
         print("Agent non entraîné sélectionné.")
     else:
         base_agent = load_agent(agent_file)
         print(f"Agent chargé depuis le fichier : {agent_file}")
 
-    # Création de la population initiale
-    num_agents = 10  # Nombre total d'agents
-    agents = [base_agent]  # Commence avec l'agent sélectionné
+    num_agents = 10
+    agents = [base_agent]
     for _ in range(num_agents - 1):
         new_agent = Agent(input_size=7, hidden_size=16, output_size=3)
         new_agent.network.weights_input_hidden = base_agent.network.weights_input_hidden.copy()
         new_agent.network.bias_hidden = base_agent.network.bias_hidden.copy()
         new_agent.network.weights_hidden_output = base_agent.network.weights_hidden_output.copy()
         new_agent.network.bias_output = base_agent.network.bias_output.copy()
-        new_agent.mutate(0.1)  # Mutation pour diversité
+        new_agent.mutate(0.1)
         agents.append(new_agent)
 
-    # Lancement de la simulation
-    run_simulation(
-        agents,
-        num_rays=7,
-        map_path=map_path,
-        initial_x=initial_x,
-        initial_y=initial_y,
-        finish_line=finish_line,
-        screen=screen  # Passe l'écran à la simulation
-    )
-
+    Simulation(map_path, initial_x, initial_y, finish_line, screen)
 
 
 def choose_map_menu(screen, font, background_color):
-    map_items = ["Carte 1", "Carte 2", "Retour"]
+    map_items = ["Map 1", "Map 2", "Return"]
     selected_index = 0
 
-    # Charger les images des voitures
-    car_left = pygame.image.load("../assets/cars/Formula1-removebg-preview.png")
-    car_left = pygame.transform.scale(car_left, (50, 100))  # Redimensionner si nécessaire
-    car_right = pygame.image.load("../assets/cars/Formula2-removebg-preview.png")
+    car_left = pygame.image.load("../assets/Formula1-removebg-preview.png")
+    car_left = pygame.transform.scale(car_left, (50, 100))
+    car_right = pygame.image.load("../assets/Formula2-removebg-preview.png")
     car_right = pygame.transform.rotate(car_right, 180)
-    car_right = pygame.transform.scale(car_right, (50, 100))  # Redimensionner si nécessaire
+    car_right = pygame.transform.scale(car_right, (50, 100))
 
-    # Initialiser les positions des voitures
     car_left_x = 50
-    car_left_y = -100  # Commence hors écran en haut
-    car_right_x = WIDTH - 100  # Commence hors écran à droite
-    car_right_y = HEIGHT  # Commence hors écran en bas
+    car_left_y = -100
+    car_right_x = WIDTH - 100
+    car_right_y = HEIGHT
 
     while True:
-        # Remplir l'écran avec la couleur de fond
         screen.fill(background_color)
 
-        # Faire défiler la voiture à gauche (de haut en bas)
-        car_left_y += 1  # Vitesse de déplacement
-        if car_left_y > HEIGHT:  # Réinitialiser lorsqu'elle sort de l'écran
+        car_left_y += 1
+        if car_left_y > HEIGHT:
             car_left_y = -100
-        screen.blit(car_left, (car_left_x, car_left_y))  # Affiche la voiture à gauche
+        screen.blit(car_left, (car_left_x, car_left_y))
 
-        # Faire défiler la voiture à droite (de bas en haut)
-        car_right_y -= 1  # Vitesse de déplacement
-        if car_right_y < -100:  # Réinitialiser lorsqu'elle sort de l'écran
+
+        car_right_y -= 1
+        if car_right_y < -100:
             car_right_y = HEIGHT
-        screen.blit(car_right, (car_right_x, car_right_y))  # Affiche la voiture à droite
+        screen.blit(car_right, (car_right_x, car_right_y))
 
-        # Affichage des options du menu
         render_centered_menu(screen, font, map_items, selected_index, y_start=200, spacing=100)
 
         for event in pygame.event.get():
@@ -115,43 +97,38 @@ def choose_map_menu(screen, font, background_color):
 
 def choose_agent_menu(screen, font, background_color):
     agent_items = [
-        "Best Agent (global)",
-        "Best Agent (map spécifique)",
-        "Agent non entraîné",
-        "Retour"
+        "Best Agent map 2",
+        "Best Agent map 1",
+        "Agent GEN 0",
+        "Return"
     ]
     selected_index = 0
 
-    # Charger les images des voitures
-    car_left = pygame.image.load("../assets/cars/Formula1-removebg-preview.png")
-    car_left = pygame.transform.scale(car_left, (50, 100))  # Redimensionner si nécessaire
-    car_right = pygame.image.load("../assets/cars/Formula2-removebg-preview.png")
+    car_left = pygame.image.load("../assets/Formula1-removebg-preview.png")
+    car_left = pygame.transform.scale(car_left, (50, 100))
+    car_right = pygame.image.load("../assets/Formula2-removebg-preview.png")
     car_right = pygame.transform.rotate(car_right, 180)
-    car_right = pygame.transform.scale(car_right, (50, 100))  # Redimensionner si nécessaire
+    car_right = pygame.transform.scale(car_right, (50, 100))
 
-    # Initialiser les positions des voitures
     car_left_x = 10
-    car_left_y = -100  # Commence hors écran en haut
-    car_right_x = WIDTH - 60  # Commence hors écran à droite
-    car_right_y = HEIGHT  # Commence hors écran en bas
+    car_left_y = -100
+    car_right_x = WIDTH - 60
+    car_right_y = HEIGHT
 
     while True:
-        # Remplir l'écran avec la couleur de fond
         screen.fill(background_color)
 
-        # Faire défiler la voiture à gauche (de haut en bas)
-        car_left_y += 1  # Vitesse de déplacement
-        if car_left_y > HEIGHT:  # Réinitialiser lorsqu'elle sort de l'écran
+        car_left_y += 1
+        if car_left_y > HEIGHT:
             car_left_y = -100
-        screen.blit(car_left, (car_left_x, car_left_y))  # Affiche la voiture à gauche
+        screen.blit(car_left, (car_left_x, car_left_y))
 
-        # Faire défiler la voiture à droite (de bas en haut)
-        car_right_y -= 1  # Vitesse de déplacement
-        if car_right_y < -100:  # Réinitialiser lorsqu'elle sort de l'écran
+
+        car_right_y -= 1
+        if car_right_y < -100:
             car_right_y = HEIGHT
-        screen.blit(car_right, (car_right_x, car_right_y))  # Affiche la voiture à droite
+        screen.blit(car_right, (car_right_x, car_right_y))
 
-        # Affichage des options du menu
         render_centered_menu(screen, font, agent_items, selected_index, y_start=200, spacing=100)
 
         for event in pygame.event.get():
@@ -169,9 +146,9 @@ def choose_agent_menu(screen, font, background_color):
                     elif selected_index == 1:
                         return "best_agent_map_1.json"
                     elif selected_index == 2:
-                        return None
+                        return "GEN0_agent.json"
                     elif selected_index == 3:
-                        return "Retour"
+                        return "Return"
         pygame.display.flip()
 
 
@@ -213,65 +190,61 @@ def render_centered_menu(screen, font, items, selected_index, y_start, spacing):
 
 def menu():
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))  # Crée l'écran principal
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Menu Principal")
 
-    # Charger les polices
-    font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 74)  # Police Poppins pour le menu
-    title_font = pygame.font.Font("../assets/fonts/PressStart2P-Regular.ttf", 120)  # Police pixel pour le titre
+    font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 74)
+    title_font = pygame.font.Font("../assets/fonts/PressStart2P-Regular.ttf", 120)
     clock = pygame.time.Clock()
 
-    # Définir la couleur de fond
-    background_color = (10, 10, 50)  # Bleu foncé
+    background_color = (10, 10, 50)
 
-    # Charger les images à faire défiler
-    scrolling_image_top = pygame.image.load("../assets/cars/Formula1-removebg-preview.png")  # Image pour le haut
-    scrolling_image_top = pygame.transform.scale(scrolling_image_top, (100, 100))  # Redimensionner
-    scrolling_image_top = pygame.transform.rotate(scrolling_image_top, 90)  # Rotation de 90 degrés
+    scrolling_image_top = pygame.image.load("../assets/Formula1-removebg-preview.png")
+    scrolling_image_top = pygame.transform.scale(scrolling_image_top, (100, 100))
+    scrolling_image_top = pygame.transform.rotate(scrolling_image_top, 90)
     image_top_width, image_top_height = scrolling_image_top.get_size()
-    image_top_x = -image_top_width  # Commence hors écran à gauche
-    image_top_y = 150  # Position verticale sous le titre
+    image_top_x = -image_top_width
+    image_top_y = 150
 
-    scrolling_image_bottom = pygame.image.load("../assets/cars/Formula2-removebg-preview.png")  # Image pour le bas
+    scrolling_image_bottom = pygame.image.load("../assets/Formula2-removebg-preview.png")
     scrolling_image_bottom = pygame.transform.scale(scrolling_image_bottom, (100, 100))
     scrolling_image_bottom = pygame.transform.rotate(scrolling_image_bottom, 270)
     image_bottom_width, image_bottom_height = scrolling_image_bottom.get_size()
-    image_bottom_x = WIDTH  # Commence hors écran à droite
-    image_bottom_y = HEIGHT - image_bottom_height - 100  # Position en bas à droite
+    image_bottom_x = WIDTH
+    image_bottom_y = HEIGHT - image_bottom_height - 100
 
-    menu_items = ["Mode Solo", "Simulation des Agents", "Quitter"]
+    menu_items = ["Solo Mode", "Simulation Mode", "Quit"]
     selected_index = 0
 
-    pygame.mixer.init()  # Initialiser le module de mixage de musique
-    pygame.mixer.music.load("../assets/music.mp3")  # Remplace le chemin avec ton fichier MP3
+    pygame.mixer.init()
+    pygame.mixer.music.load("../assets/music.mp3")
 
     pygame.mixer.music.play(start=11.0)
 
-    start_ticks = pygame.time.get_ticks()  # Temps au début du jeu
-    music_duration = 15000  # Durée en millisecondes (15 secondes)
+    start_ticks = pygame.time.get_ticks()
+    music_duration = 6000
 
     while True:
-        # Remplir l'écran avec la couleur de fond
+
         screen.fill(background_color)
 
-        # Affichage du titre "AI Racer"
         title_text = title_font.render("AI Racer", True, (255, 255, 255))
-        title_rect = title_text.get_rect(center=(WIDTH // 2, 100))  # Centré en haut de l'écran
+        title_rect = title_text.get_rect(center=(WIDTH // 2, 100))
         screen.blit(title_text, title_rect)
 
-        # Faire défiler l'image en haut
-        image_top_x += 15  # Vitesse de déplacement vers la droite
-        if image_top_x > WIDTH:  # Si l'image sort de l'écran à droite
-            image_top_x = -image_top_width  # Réinitialise la position à gauche
-        screen.blit(scrolling_image_top, (image_top_x, image_top_y))  # Affiche l'image du haut
 
-        # Faire défiler l'image en bas
-        image_bottom_x -= 15  # Vitesse de déplacement vers la gauche
-        if image_bottom_x < -image_bottom_width:  # Si l'image sort de l'écran à gauche
-            image_bottom_x = WIDTH  # Réinitialise la position à droite
-        screen.blit(scrolling_image_bottom, (image_bottom_x, image_bottom_y))  # Affiche l'image du bas
+        image_top_x += 15
+        if image_top_x > WIDTH:
+            image_top_x = -image_top_width
+        screen.blit(scrolling_image_top, (image_top_x, image_top_y))
 
-        # Affichage du menu avec les options
+
+        image_bottom_x -= 15
+        if image_bottom_x < -image_bottom_width:
+            image_bottom_x = WIDTH
+        screen.blit(scrolling_image_bottom, (image_bottom_x, image_bottom_y))
+
+
         render_centered_menu(screen, font, menu_items, selected_index, y_start=300, spacing=100)
 
         if pygame.time.get_ticks() - start_ticks > music_duration:
@@ -288,13 +261,13 @@ def menu():
                 elif event.key == pygame.K_DOWN:
                     selected_index = (selected_index + 1) % len(menu_items)
                 elif event.key == pygame.K_RETURN:
-                    if selected_index in [0, 1]:  # Mode Solo ou Simulation
+                    if selected_index in [0, 1]:
                         map_choice = choose_map_menu(screen, font, background_color)
                         if map_choice is not None:
                             if selected_index == 0:
-                                single_mode(map_choice)
+                                single_mode()
                             elif selected_index == 1:
-                                simulation_mode(map_choice, screen)  # Passe l'écran ici
+                                simulation_mode(map_choice, screen)
                     elif selected_index == 2:  # Quitter
                         pygame.quit()
                         sys.exit()

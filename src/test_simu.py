@@ -1,3 +1,4 @@
+
 import sys
 
 import numpy as np
@@ -257,10 +258,7 @@ def run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line
         pygame.display.flip()
         clock.tick(60)
 
-
-
-
-def main():
+def Simulation(map_path, initial_x, initial_y, finish_line, screen):
     global best_lap_gen, current_generation
     num_agents = 10
     max_generations = 10000
@@ -317,7 +315,7 @@ def main():
         best_agent = None
 
     for generation in range(max_generations):
-        run_simulation(agents, num_rays)
+        run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line, screen)
 
         # Identifier le meilleur agent de cette génération
         current_best_agent = find_best_agent(agents)
@@ -360,5 +358,3 @@ def main():
                 generation + current_generation,
                 current_best_agent.best_lap,
             ]
-
-
