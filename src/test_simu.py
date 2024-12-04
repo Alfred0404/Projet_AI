@@ -3,10 +3,9 @@ import sys
 import numpy as np
 import pygame
 
-from classes.Agent import Agent
-from classes.Car import Car  # Classe gérant les voitures
+from Agent import Agent
+from Car import Car  # Classe gérant les voitures
 from config_game import *  # Configuration spécifique du jeu
-from classes.NeuralNetwork import SimpleNeuralNetwork
 
 global current_generation
 current_generation = 0
@@ -132,26 +131,28 @@ def display_chrono(screen, font, bestlap, chrono):
 def kill_all_cars(cars):
     for car in cars:
         car.alive = False
-        
-def display_finish_line(map):
-    pygame.draw.line(map, (255, 0, 0),  finish_line[0], finish_line[1], 5)
+
+def display_finish_line(map, finish_line):
+    pygame.draw.line(map, (255, 0, 0), finish_line[0], finish_line[1], 5)
 
 
-def run_simulation(agents, num_rays):
+
+def run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line, screen):
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     game_map = pygame.image.load(map_path)
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
-    font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 20)
+    font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 20)
     global current_generation
     current_generation += 1
 
     global best_lap_gen
     counter = 0
 
-    cars = [Car((i for i in range(len(agents))), num_rays, agent) for agent in agents]
+    cars = [Car(i, num_rays, agent, initial_x, initial_y, finish_line) for i, agent in enumerate(agents)]
     list_podium = [cars[0], cars[1], cars[2]]
+
+    # Initialisation de car_metrics
     car_metrics = {
         i: {
             "last_positions": [],
@@ -167,12 +168,11 @@ def run_simulation(agents, num_rays):
     while run:
         list_podium = get_top_3_cars(cars)
 
-        # Gestion des evenements
+        # Gestion des événements
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (
-                event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
-            ):
-                sys.exit(0)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
         # Mise à jour des voitures...
         for i, car in enumerate(cars):
@@ -252,15 +252,17 @@ def run_simulation(agents, num_rays):
         screen.blit(still_alive_text, (10, 50))
 
         counter += 1
-        display_finish_line(game_map)
+        display_finish_line(game_map, finish_line)
         display_chrono(screen, font, best_lap_gen, counter)
         pygame.display.flip()
         clock.tick(60)
 
 
+
+
 def main():
     global best_lap_gen, current_generation
-    num_agents = 50
+    num_agents = 10
     max_generations = 10000
     mutation_rate = 0.5
     num_rays = 7
@@ -360,5 +362,3 @@ def main():
             ]
 
 
-if __name__ == "__main__":
-    main()

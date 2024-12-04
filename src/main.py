@@ -2,7 +2,7 @@ import sys
 
 import pygame
 
-from classes.Car import Car
+from Car import Car
 from config_game import *
 
 

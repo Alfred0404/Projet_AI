@@ -1,9 +1,7 @@
 import neat
 import pygame
 import sys
-import math
-import time
-from classes.Car import Car
+from Car import Car
 from config_game import *
 
 current_generation = 0

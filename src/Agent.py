@@ -1,4 +1,4 @@
-from classes.NeuralNetwork import SimpleNeuralNetwork
+from NeuralNetwork import SimpleNeuralNetwork
 import numpy as np
 
 class Agent:
@@ -8,17 +8,19 @@ class Agent:
         self.best_lap = 0
 
     def load_agent(
-        self,
-        weights_input_hidden,
-        bias_hidden,
-        weights_hidden_output,
-        bias_output,
-        best_lap,
-        fitness,
+            self,
+            weights_input_hidden,
+            bias_hidden,
+            weights_hidden_output,
+            bias_output,
+            best_lap,
+            fitness,
     ):
-        self.network.load_parameters(
-            weights_input_hidden, bias_hidden, weights_hidden_output, bias_output
-        )
+        # Conversion explicite en tableaux NumPy
+        self.network.weights_input_hidden = np.array(weights_input_hidden)
+        self.network.bias_hidden = np.array(bias_hidden)
+        self.network.weights_hidden_output = np.array(weights_hidden_output)
+        self.network.bias_output = np.array(bias_output)
         self.best_lap = best_lap
         self.fitness = fitness
 

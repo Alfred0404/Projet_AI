@@ -5,13 +5,14 @@ import random
 import pygame
 import time
 
-from config_game import *
+from src.config_game import *
 
 
 class Car:
-    def __init__(self, ids, num_rays, agent):
+    def __init__(self, ids, num_rays, agent, initial_x, initial_y, finish_line):
         self.x = initial_x
         self.y = initial_y
+        self.finish_line = finish_line
         self.ids = ids
         self.height = 50
         self.width = 28
@@ -41,9 +42,9 @@ class Car:
         self.agent = agent
 
     def select_random_sprite(self):
-        files = [file for file in os.listdir("./assets/cars") if file.endswith(".png")]
+        files = [file for file in os.listdir("../assets/cars") if file.endswith(".png")]
         random_number = random.randint(0, len(files) - 1)
-        return pygame.image.load(f"./assets/cars/{files[random_number]}")
+        return pygame.image.load(f"../assets/cars/{files[random_number]}")
 
     def update(self, best_lap):
         self.move()
@@ -311,10 +312,10 @@ class Car:
 
     def cross_finish_line(self, best_lap):
         if (
-            finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
-            and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
-            and self.list_pos_10[0][1] > finish_line[0][1] >= self.list_pos_10[-1][1]
-            and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
+            self.finish_line[0][0] <= self.list_pos_10[0][0] <= self.finish_line[1][0]
+            and self.finish_line[0][0] <= self.list_pos_10[-1][0] <= self.finish_line[1][0]
+            and self.list_pos_10[0][1] > self.finish_line[0][1] >= self.list_pos_10[-1][1]
+            and self.list_pos_10[0][1] > self.finish_line[1][1] >= self.list_pos_10[-1][1]
         ):
             if self.cross_finish == False:
                 self.score += 10000 / (self.counter)
