@@ -1,4 +1,3 @@
-
 import sys
 
 import numpy as np
@@ -46,24 +45,25 @@ def find_best_agent(agents):
 import json
 
 
-def save_best_agent(best_agent, filename=agent_path, current_generation=0):
+def save_best_agent(best_agent, filename, current_generation=0):
     """
     Sauvegarde le meilleur agent avec toutes ses données pertinentes.
     """
-    data = {
-        "weights_input_hidden": best_agent.network.weights_input_hidden.tolist(),
-        "weights_hidden_output": best_agent.network.weights_hidden_output.tolist(),
-        "bias_hidden": best_agent.network.bias_hidden.tolist(),
-        "bias_output": best_agent.network.bias_output.tolist(),
-        "generation": current_generation,
-        "best_lap": best_agent.best_lap,
-        "fitness": best_agent.fitness,
-    }
-    with open(filename, "w") as f:
-        json.dump(data, f)
+    if filename != "src/GEN0_agent.json":
+        data = {
+            "weights_input_hidden": best_agent.network.weights_input_hidden.tolist(),
+            "weights_hidden_output": best_agent.network.weights_hidden_output.tolist(),
+            "bias_hidden": best_agent.network.bias_hidden.tolist(),
+            "bias_output": best_agent.network.bias_output.tolist(),
+            "generation": current_generation,
+            "best_lap": best_agent.best_lap,
+            "fitness": best_agent.fitness,
+        }
+        with open(filename, "w") as f:
+            json.dump(data, f)
 
 
-def get_best_agent(ray_nums=7):
+def get_best_agent(ray_nums=7, agent_path="src/best_agent.json"):
     """
     Charge le meilleur agent à partir du fichier de sauvegarde.
     """
@@ -119,38 +119,50 @@ def get_top_3_cars(cars):
     return sorted_cars[:3]
 
 
-def display_chrono(screen, font, bestlap, chrono):
+def display_chrono(screen, font, bestlap, chrono, results_pos):
     # Afficher le chrono
-    texte = font.render(
+    text = font.render(
         f"GEN : {bestlap[0]} Chrono: {bestlap[1]}", True, (255, 255, 255)
     )
-    screen.blit(texte, (700, 500))
-    texte = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
-    screen.blit(texte, (10, 70))
+    screen.blit(text, results_pos)
+    try:
+        max_fitness_text = font.render(
+            f"Best fitness: {round(bestlap[2])}", True, (255, 255, 255)
+        )
+    except:
+        max_fitness_text = font.render(f"Best fitness: 0", True, (255, 255, 255))
+    screen.blit(max_fitness_text, (results_pos[0], results_pos[1] + 30))
+    text = font.render(f"Chrono: {chrono}", True, (255, 255, 255))
+    screen.blit(text, (10, 70))
 
 
 def kill_all_cars(cars):
     for car in cars:
         car.alive = False
 
+
 def display_finish_line(map, finish_line):
     pygame.draw.line(map, (255, 0, 0), finish_line[0], finish_line[1], 5)
 
 
-
-def run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line, screen):
+def run_simulation(
+    agents, num_rays, map_path, initial_x, initial_y, finish_line, screen, results_pos
+):
     pygame.init()
     game_map = pygame.image.load(map_path)
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
-    font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 20)
+    font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 20)
     global current_generation
     current_generation += 1
 
     global best_lap_gen
     counter = 0
 
-    cars = [Car(i, num_rays, agent, initial_x, initial_y, finish_line) for i, agent in enumerate(agents)]
+    cars = [
+        Car(i, num_rays, agent, initial_x, initial_y, finish_line)
+        for i, agent in enumerate(agents)
+    ]
     list_podium = [cars[0], cars[1], cars[2]]
 
     # Initialisation de car_metrics
@@ -254,15 +266,18 @@ def run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line
 
         counter += 1
         display_finish_line(game_map, finish_line)
-        display_chrono(screen, font, best_lap_gen, counter)
+        display_chrono(screen, font, best_lap_gen, counter, results_pos)
         pygame.display.flip()
         clock.tick(60)
 
-def Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_path):
+
+def Simulation(
+    map_path, initial_x, initial_y, finish_line, screen, agent_path, results_pos
+):
     global best_lap_gen, current_generation
     num_agents = 10
     max_generations = 10000
-    mutation_rate = 0.5
+    mutation_rate = 0.3
     num_rays = 7
 
     # Tentative de chargement du meilleur agent
@@ -270,7 +285,7 @@ def Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_path):
         with open(agent_path, "r") as f:
             data = json.load(f)
             if data:  # si le fichier n'est pas vide
-                best_agent = get_best_agent(num_rays)
+                best_agent = get_best_agent(num_rays, agent_path)
                 # Créer une population initiale basée sur le meilleur agent
                 agents = [best_agent]  # Ajouter le meilleur agent directement
                 # Créer des variations du meilleur agent
@@ -315,7 +330,16 @@ def Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_path):
         best_agent = None
 
     for generation in range(max_generations):
-        run_simulation(agents, num_rays, map_path, initial_x, initial_y, finish_line, screen)
+        run_simulation(
+            agents,
+            num_rays,
+            map_path,
+            initial_x,
+            initial_y,
+            finish_line,
+            screen,
+            results_pos,
+        )
 
         # Identifier le meilleur agent de cette génération
         current_best_agent = find_best_agent(agents)
@@ -341,7 +365,9 @@ def Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_path):
 
             # Sauvegarder le meilleur agent
             save_best_agent(
-                best_agent, current_generation=generation + current_generation
+                best_agent,
+                current_generation=generation + current_generation,
+                filename=agent_path,
             )
 
         # Créer la nouvelle génération
@@ -358,4 +384,3 @@ def Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_path):
                 generation + current_generation,
                 current_best_agent.best_lap,
             ]
-

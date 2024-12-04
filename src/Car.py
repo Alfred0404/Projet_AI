@@ -5,7 +5,7 @@ import random
 import pygame
 import time
 
-from src.config_game import *
+from config_game import *
 
 
 class Car:
@@ -42,14 +42,14 @@ class Car:
         self.agent = agent
 
     def select_random_sprite(self):
-        files = [file for file in os.listdir("../assets/cars") if file.endswith(".png")]
+        files = [file for file in os.listdir("./assets/cars") if file.endswith(".png")]
         random_number = random.randint(0, len(files) - 1)
-        return pygame.image.load(f"../assets/cars/{files[random_number]}")
+        return pygame.image.load(f"./assets/cars/{files[random_number]}")
 
     def update(self, best_lap):
         self.move()
         self.update_score()
-        #self.display(screen, ratio)
+        # self.display(screen, ratio)
         self.time_alive = time.time() - self.start_time
 
         self.get_pos()
@@ -130,7 +130,7 @@ class Car:
             # pygame.draw.circle(screen, (0, 0, 255), corner, 3)
             try:
                 if screen.get_at(corner) == background:
-                    #print(self.score)
+                    # print(self.score)
                     self.reset()
                     if not self.alive:
                         self.score -= 1
@@ -159,8 +159,8 @@ class Car:
         # Afficher les rayons de vue
         self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
-        #self.display_time(screen)
-        #self.display_laps(screen)
+        # self.display_time(screen)
+        # self.display_laps(screen)
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -237,7 +237,6 @@ class Car:
 
     def reset(self):
         self.alive = False
- 
 
     def update_score(self):
         self.score += self.speed / (self.counter + 1)
@@ -290,8 +289,7 @@ class Car:
             end_x, end_y = cast_ray(center, ray_angle)
             self.distance_rays[i] = (((end_x - center[0]) ** 2 + (end_y - center[1]) ** 2) ** 0.5)
             # pygame.draw.line(screen, (255, 0, 255), center, (end_x - 1, end_y - 1), 1)
-            #pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
-
+            # pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
 
     def display_time(self, screen):
         font = pygame.font.Font(None, 36)
@@ -319,7 +317,7 @@ class Car:
         ):
             if self.cross_finish == False:
                 self.score += 10000 / (self.counter)
-                #self.score *= 2
+                # self.score *= 2
                 self.cross_finish = True
                 self.alive = False
                 self.arrived = True
@@ -329,3 +327,10 @@ class Car:
 
             else:
                 self.cross_finish = False
+        elif (
+            self.finish_line[0][0] <= self.list_pos_10[0][0] <= self.finish_line[1][0]
+            and self.finish_line[0][0] <= self.list_pos_10[-1][0] <= self.finish_line[1][0]
+            and self.list_pos_10[0][1] < self.finish_line[0][1] <= self.list_pos_10[-1][1]
+            and self.list_pos_10[0][1] < self.finish_line[1][1] <= self.list_pos_10[-1][1]
+        ):
+            self.alive = False

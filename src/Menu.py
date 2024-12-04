@@ -8,7 +8,7 @@ def single_mode():
     course()
 
 def simulation_mode(map_choice, screen):
-    map_path, initial_x, initial_y, finish_line = choose_map(map_choice)
+    map_path, initial_x, initial_y, finish_line, results_pos = choose_map(map_choice)
     print(f"Mode simulation sélectionné avec la carte {map_choice} !")
     print(f"Carte chargée : {map_path}, Départ : ({initial_x}, {initial_y})")
     print(f"Lancement de la simulation pour la carte {map_choice}")
@@ -16,9 +16,9 @@ def simulation_mode(map_choice, screen):
     background_color = (10, 10, 50)
 
     # Sous-menu pour choisir l'agent
-    font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 74)
+    font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 74)
     agent_file = choose_agent_menu(screen, font, background_color)
-    if agent_file == "Retour":
+    if agent_file == "Return":
         return
 
 
@@ -41,7 +41,7 @@ def simulation_mode(map_choice, screen):
         new_agent.mutate(0.1)
         agents.append(new_agent)
 
-    Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_file)
+    Simulation(map_path, initial_x, initial_y, finish_line, screen, agent_file, results_pos)
 
 
 
@@ -49,9 +49,9 @@ def choose_map_menu(screen, font, background_color):
     map_items = ["Map 1", "Map 2", "Return"]
     selected_index = 0
 
-    car_left = pygame.image.load("../assets/Formula1-removebg-preview.png")
+    car_left = pygame.image.load("./assets/Formula1-removebg-preview.png")
     car_left = pygame.transform.scale(car_left, (50, 100))
-    car_right = pygame.image.load("../assets/Formula2-removebg-preview.png")
+    car_right = pygame.image.load("./assets/Formula2-removebg-preview.png")
     car_right = pygame.transform.rotate(car_right, 180)
     car_right = pygame.transform.scale(car_right, (50, 100))
 
@@ -106,9 +106,9 @@ def choose_agent_menu(screen, font, background_color):
     ]
     selected_index = 0
 
-    car_left = pygame.image.load("../assets/Formula1-removebg-preview.png")
+    car_left = pygame.image.load("./assets/Formula1-removebg-preview.png")
     car_left = pygame.transform.scale(car_left, (50, 100))
-    car_right = pygame.image.load("../assets/Formula2-removebg-preview.png")
+    car_right = pygame.image.load("./assets/Formula2-removebg-preview.png")
     car_right = pygame.transform.rotate(car_right, 180)
     car_right = pygame.transform.scale(car_right, (50, 100))
 
@@ -144,11 +144,11 @@ def choose_agent_menu(screen, font, background_color):
                     selected_index = (selected_index + 1) % len(agent_items)
                 elif event.key == pygame.K_RETURN:
                     if selected_index == 0:
-                        return "best_agent.json"
+                        return "src/best_agent.json"
                     elif selected_index == 1:
-                        return "best_agent_map_1.json"
+                        return "src/best_agent_map_1.json"
                     elif selected_index == 2:
-                        return "GEN0_agent.json"
+                        return "src/GEN0_agent.json"
                     elif selected_index == 3:
                         return "Return"
         pygame.display.flip()
@@ -195,20 +195,20 @@ def menu():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Menu Principal")
 
-    font = pygame.font.Font("../assets/fonts/Poppins-Medium.ttf", 74)
-    title_font = pygame.font.Font("../assets/fonts/PressStart2P-Regular.ttf", 120)
+    font = pygame.font.Font("./assets/fonts/Poppins-Medium.ttf", 74)
+    title_font = pygame.font.Font("./assets/fonts/PressStart2P-Regular.ttf", 120)
     clock = pygame.time.Clock()
 
     background_color = (10, 10, 50)
 
-    scrolling_image_top = pygame.image.load("../assets/Formula1-removebg-preview.png")
+    scrolling_image_top = pygame.image.load("./assets/Formula1-removebg-preview.png")
     scrolling_image_top = pygame.transform.scale(scrolling_image_top, (100, 100))
     scrolling_image_top = pygame.transform.rotate(scrolling_image_top, 90)
     image_top_width, image_top_height = scrolling_image_top.get_size()
     image_top_x = -image_top_width
     image_top_y = 150
 
-    scrolling_image_bottom = pygame.image.load("../assets/Formula2-removebg-preview.png")
+    scrolling_image_bottom = pygame.image.load("./assets/Formula2-removebg-preview.png")
     scrolling_image_bottom = pygame.transform.scale(scrolling_image_bottom, (100, 100))
     scrolling_image_bottom = pygame.transform.rotate(scrolling_image_bottom, 270)
     image_bottom_width, image_bottom_height = scrolling_image_bottom.get_size()
@@ -219,7 +219,7 @@ def menu():
     selected_index = 0
 
     pygame.mixer.init()
-    pygame.mixer.music.load("../assets/music.mp3")
+    pygame.mixer.music.load("./assets/music.mp3")
 
     pygame.mixer.music.play(start=11.0)
 

@@ -48,7 +48,7 @@ def course():
 
     # Choisir la carte et récupérer les paramètres
     map_choice = 1  # Par exemple, tu choisis "Carte 1"
-    map_path, initial_x, initial_y, finish_line = choose_map(map_choice)
+    map_path, initial_x, initial_y, finish_line, results_pos = choose_map(map_choice)
 
     print(f"Carte choisie : {map_choice}")
     print(f"Initialisation de la voiture avec position : ({initial_x}, {initial_y})")
@@ -65,5 +65,3 @@ def course():
         car.move()
         print(car.x, car.y)
         clock.tick(60)
-
-
