@@ -64,7 +64,7 @@ This is a team project:
 
 * **[Alfred de Vulpian](https://github.com/Alfred0404)**
 * **[Clément d'Alberto](https://github.com/Clement-dl)**
-* **[Ethan Pétain](https://github.com/ethanECE)**
+* **[Ethan Pétain](https://github.com/SirTeenager)**
 
 ## License
 
