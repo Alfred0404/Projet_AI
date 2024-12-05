@@ -9,9 +9,11 @@ from config_game import *
 
 
 class Car:
-    def __init__(self, ids, num_rays, agent):
+
+    def __init__(self, ids, num_rays, agent, initial_x, initial_y, finish_line):
         self.x = initial_x
         self.y = initial_y
+        self.finish_line = finish_line
         self.ids = ids
         self.height = 50
         self.width = 28
@@ -48,7 +50,7 @@ class Car:
     def update(self, best_lap):
         self.move()
         self.update_score()
-        #self.display(screen, ratio)
+        # self.display(screen, ratio)
         self.time_alive = time.time() - self.start_time
 
         self.get_pos()
@@ -129,7 +131,7 @@ class Car:
             # pygame.draw.circle(screen, (0, 0, 255), corner, 3)
             try:
                 if screen.get_at(corner) == background:
-                    #print(self.score)
+                    # print(self.score)
                     self.reset()
                     if not self.alive:
                         self.score -= 1
@@ -158,8 +160,8 @@ class Car:
         # Afficher les rayons de vue
         self.detect_collision(screen)
         self.display_rays(screen, self.image_rect.center)
-        #self.display_time(screen)
-        #self.display_laps(screen)
+        # self.display_time(screen)
+        # self.display_laps(screen)
 
     def move(self):
         # Calcul de la rotation et du déplacement en fonction de l'angle de roue
@@ -237,7 +239,6 @@ class Car:
     def reset(self):
         self.alive = False
 
-
     def update_score(self):
         self.score += self.speed / (self.counter + 1)
         # print(f"Agent score: {round(self.score, 2)}")
@@ -288,9 +289,8 @@ class Car:
             ray_angle = math.radians(self.angle) + angle_offset
             end_x, end_y = cast_ray(center, ray_angle)
             self.distance_rays[i] = (((end_x - center[0]) ** 2 + (end_y - center[1]) ** 2) ** 0.5)
-            # pygame.draw.line(screen, (255, 0, 255), center, (end_x - 1, end_y - 1), 1)
-            #pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
-
+            pygame.draw.line(screen, (255, 0, 255), center, (end_x - 1, end_y - 1), 1)
+            # pygame.draw.circle(screen, (255, 0, 255), (end_x, end_y), 5)
 
     def display_time(self, screen):
         font = pygame.font.Font(None, 36)
@@ -311,14 +311,14 @@ class Car:
 
     def cross_finish_line(self, best_lap):
         if (
-            finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
-            and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
-            and self.list_pos_10[0][1] > finish_line[0][1] >= self.list_pos_10[-1][1]
-            and self.list_pos_10[0][1] > finish_line[1][1] >= self.list_pos_10[-1][1]
+            self.finish_line[0][0] <= self.list_pos_10[0][0] <= self.finish_line[1][0]
+            and self.finish_line[0][0] <= self.list_pos_10[-1][0] <= self.finish_line[1][0]
+            and self.list_pos_10[0][1] > self.finish_line[0][1] >= self.list_pos_10[-1][1]
+            and self.list_pos_10[0][1] > self.finish_line[1][1] >= self.list_pos_10[-1][1]
         ):
             if self.cross_finish == False:
                 self.score += 10000 / (self.counter)
-                #self.score *= 2
+                # self.score *= 2
                 self.cross_finish = True
                 self.alive = False
                 self.arrived = True

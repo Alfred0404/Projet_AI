@@ -141,8 +141,8 @@ def kill_all_cars(cars):
     for car in cars:
         car.alive = False
 
-def display_finish_line(map):
-    pygame.draw.line(map, (255, 0, 0),  finish_line[0], finish_line[1], 5)
+# def display_finish_line(map):
+#     pygame.draw.line(map, (255, 0, 0),  finish_line[0], finish_line[1], 5)
 
 
 def display_finish_line(map, finish_line):
