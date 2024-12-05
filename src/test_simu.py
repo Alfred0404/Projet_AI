@@ -3,10 +3,10 @@ import sys
 import numpy as np
 import pygame
 
-from classes.Agent import Agent
-from classes.Car import Car  # Classe gérant les voitures
+from Agent import Agent
+from Car import Car  # Classe gérant les voitures
 from config_game import *  # Configuration spécifique du jeu
-from classes.NeuralNetwork import SimpleNeuralNetwork
+
 global current_generation
 current_generation = 0
 
@@ -45,24 +45,25 @@ def find_best_agent(agents):
 import json
 
 
-def save_best_agent(best_agent, filename=agent_path, current_generation=0):
+def save_best_agent(best_agent, filename, current_generation=0):
     """
     Sauvegarde le meilleur agent avec toutes ses données pertinentes.
     """
-    data = {
-        "weights_input_hidden": best_agent.network.weights_input_hidden.tolist(),
-        "weights_hidden_output": best_agent.network.weights_hidden_output.tolist(),
-        "bias_hidden": best_agent.network.bias_hidden.tolist(),
-        "bias_output": best_agent.network.bias_output.tolist(),
-        "generation": current_generation,
-        "best_lap": best_agent.best_lap,
-        "fitness": best_agent.fitness,
-    }
-    with open(filename, "w") as f:
-        json.dump(data, f)
+    if filename != "src/GEN0_agent.json":
+        data = {
+            "weights_input_hidden": best_agent.network.weights_input_hidden.tolist(),
+            "weights_hidden_output": best_agent.network.weights_hidden_output.tolist(),
+            "bias_hidden": best_agent.network.bias_hidden.tolist(),
+            "bias_output": best_agent.network.bias_output.tolist(),
+            "generation": current_generation,
+            "best_lap": best_agent.best_lap,
+            "fitness": best_agent.fitness,
+        }
+        with open(filename, "w") as f:
+            json.dump(data, f)
 
 
-def get_best_agent(ray_nums=7):
+def get_best_agent(ray_nums=7, agent_path="src/best_agent.json"):
     """
     Charge le meilleur agent à partir du fichier de sauvegarde.
     """
@@ -125,7 +126,10 @@ def display_chrono(screen, font, bestlap, chrono, results_pos):
     )
     screen.blit(text, results_pos)
     try:
-        max_fitness_text = font.render(f"Best fitness: {round(bestlap[2])}", True, (255, 255, 255))
+
+        max_fitness_text = font.render(
+            f"Best fitness: {round(bestlap[2])}", True, (255, 255, 255)
+        )
     except:
         max_fitness_text = font.render(f"Best fitness: 0", True, (255, 255, 255))
     screen.blit(max_fitness_text, (results_pos[0], results_pos[1] + 30))
@@ -141,10 +145,15 @@ def display_finish_line(map):
     pygame.draw.line(map, (255, 0, 0),  finish_line[0], finish_line[1], 5)
 
 
-def run_simulation(agents, num_rays):
+def display_finish_line(map, finish_line):
+    pygame.draw.line(map, (255, 0, 0), finish_line[0], finish_line[1], 5)
+
+
+def run_simulation(
+    agents, num_rays, map_path, initial_x, initial_y, finish_line, screen, results_pos
+):
     pygame.init()
 
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     game_map = pygame.image.load(map_path)
     game_map = pygame.transform.scale(game_map, (WIDTH - 15, HEIGHT - 15))
     clock = pygame.time.Clock()
@@ -155,8 +164,13 @@ def run_simulation(agents, num_rays):
     global best_lap_gen
     counter = 0
 
-    cars = [Car((i for i in range(len(agents))), num_rays, agent) for agent in agents]
+    cars = [
+        Car(i, num_rays, agent, initial_x, initial_y, finish_line)
+        for i, agent in enumerate(agents)
+    ]
     list_podium = [cars[0], cars[1], cars[2]]
+
+    # Initialisation de car_metrics
     car_metrics = {
         i: {
             "last_positions": [],
@@ -172,12 +186,11 @@ def run_simulation(agents, num_rays):
     while run:
         list_podium = get_top_3_cars(cars)
 
-        # Gestion des evenements
+        # Gestion des événements
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or (
-                event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
-            ):
-                sys.exit(0)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
         # Mise à jour des voitures...
         for i, car in enumerate(cars):
@@ -257,17 +270,19 @@ def run_simulation(agents, num_rays):
         screen.blit(still_alive_text, (10, 50))
 
         counter += 1
-        display_finish_line(game_map)
+        display_finish_line(game_map, finish_line)
         display_chrono(screen, font, best_lap_gen, counter, results_pos)
         pygame.display.flip()
         clock.tick(60)
 
 
-def main():
+def Simulation(
+    map_path, initial_x, initial_y, finish_line, screen, agent_path, results_pos
+):
     global best_lap_gen, current_generation
-    num_agents = 70
+    num_agents = 10
     max_generations = 10000
-    mutation_rate = 0.5
+    mutation_rate = 0.3
     num_rays = 7
 
     # Tentative de chargement du meilleur agent
@@ -275,7 +290,7 @@ def main():
         with open(agent_path, "r") as f:
             data = json.load(f)
             if data:  # si le fichier n'est pas vide
-                best_agent = get_best_agent(num_rays)
+                best_agent = get_best_agent(num_rays, agent_path)
                 # Créer une population initiale basée sur le meilleur agent
                 agents = [best_agent]  # Ajouter le meilleur agent directement
                 # Créer des variations du meilleur agent
@@ -320,7 +335,16 @@ def main():
         best_agent = None
 
     for generation in range(max_generations):
-        run_simulation(agents, num_rays)
+        run_simulation(
+            agents,
+            num_rays,
+            map_path,
+            initial_x,
+            initial_y,
+            finish_line,
+            screen,
+            results_pos,
+        )
 
         # Identifier le meilleur agent de cette génération
         current_best_agent = find_best_agent(agents)
@@ -346,7 +370,9 @@ def main():
 
             # Sauvegarder le meilleur agent
             save_best_agent(
-                best_agent, current_generation=generation + current_generation
+                best_agent,
+                current_generation=generation + current_generation,
+                filename=agent_path,
             )
 
         # Créer la nouvelle génération
@@ -364,7 +390,3 @@ def main():
                 current_best_agent.best_lap,
                 current_best_agent.fitness,
             ]
-
-
-if __name__ == "__main__":
-    main()

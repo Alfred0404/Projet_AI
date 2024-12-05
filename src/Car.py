@@ -236,7 +236,7 @@ class Car:
 
     def reset(self):
         self.alive = False
- 
+
 
     def update_score(self):
         self.score += self.speed / (self.counter + 1)
@@ -328,11 +328,3 @@ class Car:
 
             else:
                 self.cross_finish = False
-        elif (
-            finish_line[0][0] <= self.list_pos_10[0][0] <= finish_line[1][0]
-            and finish_line[0][0] <= self.list_pos_10[-1][0] <= finish_line[1][0]
-            and self.list_pos_10[0][1] < finish_line[0][1] <= self.list_pos_10[-1][1]
-            and self.list_pos_10[0][1] < finish_line[1][1] <= self.list_pos_10[-1][1]
-        ):
-            self.alive = False
-

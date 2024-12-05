@@ -7,7 +7,7 @@ zoom_factor = 0.8
 zoom_step = 0.1
 
 # colors
-background = (50, 150, 50)
+background = (10, 10, 50)
 
 
 def choose_map(map_id):
@@ -31,5 +31,4 @@ def choose_map(map_id):
     return map_path, initial_x, initial_y, finish_line, results_pos
 
 
-map_path, initial_x, initial_y, finish_line, results_pos = choose_map(2)
-agent_path = "src/best_agent_map_2.json"
+agent_path = "src/best_agent.json"
